@@ -1,0 +1,53 @@
+{
+  "id": "TheBloke/Airoboros-L2-13B-2.1-GGUF",
+  "name": "Airoboros-L2-13B-2.1-GGUF",
+  "shortDescription": "some description",
+  "avatarUrl": "https://aeiljuispo.cloudimg.io/v7/https://cdn-uploads.huggingface.co/production/uploads/6426d3f3a7723d62b53c259b/tvPikpAzKTKGN5wrpadOJ.jpeg?w=200&h=200&f=face",
+  "longDescription": "GGUF is a new format introduced by the llama.cpp team on August 21st 2023. It is a replacement for GGML, which is no longer supported by llama.cpp. GGUF offers numerous advantages over GGML, such as better tokenisation, and support for special tokens. It is also supports metadata, and is designed to be extensible.",
+  "author": "The Bloke",
+  "version": "1.0.0",
+  "modelUrl": "https://huggingface.co/TheBloke/Airoboros-L2-13B-2.1-GGUF",
+  "nsfw": false,
+  "tags": ["freeform", "tags"],
+  "defaultGreeting": "Hello there",
+  "type": "LLM",
+  "createdAt": 0,
+  "versions": [
+    {
+      "name": "wizardcoder-python-13b-v1.0.Q2_K.gguf",
+      "quantMethod": "Q2_K",
+      "bits": 2,
+      "size": 5430000000,
+      "maxRamRequired": 7930000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/WizardCoder-Python-13B-V1.0-GGUF/resolve/main/wizardcoder-python-13b-v1.0.Q2_K.gguf"
+    },
+    {
+      "name": "wizardcoder-python-13b-v1.0.Q3_K_L.gguf",
+      "quantMethod": "Q3_K_L",
+      "bits": 3,
+      "size": 6930000000,
+      "maxRamRequired": 9430000000,
+      "usecase": "small, substantial quality loss",
+      "downloadLink": "https://huggingface.co/TheBloke/WizardCoder-Python-13B-V1.0-GGUF/resolve/main/wizardcoder-python-13b-v1.0.Q3_K_L.gguf"
+    },
+    {
+      "name": "wizardcoder-python-13b-v1.0.Q4_K_M.gguf",
+      "quantMethod": "Q4_K_M",
+      "bits": 4,
+      "size": 7870000000,
+      "maxRamRequired": 10370000000,
+      "usecase": "medium, balanced quality - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/WizardCoder-Python-13B-V1.0-GGUF/resolve/main/wizardcoder-python-13b-v1.0.Q4_K_M.gguf"
+    },
+    {
+      "name": "wizardcoder-python-13b-v1.0.Q5_K_M.gguf",
+      "quantMethod": "Q5_K_M",
+      "bits": 5,
+      "size": 9230000000,
+      "maxRamRequired": 11730000000,
+      "usecase": "large, very low quality loss - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/WizardCoder-Python-13B-V1.0-GGUF/resolve/main/wizardcoder-python-13b-v1.0.Q5_K_M.gguf"
+    }
+  ]
+}

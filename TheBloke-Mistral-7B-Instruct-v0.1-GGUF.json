@@ -6,7 +6,7 @@
   "longDescription": "GGUF is a new format introduced by the llama.cpp team on August 21st 2023. It is a replacement for GGML, which is no longer supported by llama.cpp. GGUF offers numerous advantages over GGML, such as better tokenisation, and support for special tokens. It is also supports metadata, and is designed to be extensible.",
   "author": "The Bloke",
   "version": "1.0.0",
-  "modelUrl": "https://google.com",
+  "modelUrl": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
   "nsfw": false,
   "tags": ["freeform", "tags"],
   "defaultGreeting": "Hello there",
@@ -21,6 +21,51 @@
       "maxRamRequired": 5580000000,
       "usecase": "smallest, significant quality loss - not recommended for most purposes",
       "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q2_K.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q3_K_L.gguf",
+      "quantMethod": "Q3_K_L",
+      "bits": 3,
+      "size": 3820000000,
+      "maxRamRequired": 6320000000,
+      "usecase": "small, substantial quality loss",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q3_K_L.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q4_K_M.gguf",
+      "quantMethod": "Q4_K_M",
+      "bits": 4,
+      "size": 4370000000,
+      "maxRamRequired": 6870000000,
+      "usecase": "medium, balanced quality - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q5_K_S.gguf",
+      "quantMethod": "Q5",
+      "bits": 5,
+      "size": 5000000000,
+      "maxRamRequired": 7500000000,
+      "usecase": "large, low quality loss - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q5_K_S.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q5_K_S.gguf",
+      "quantMethod": "Q6_K",
+      "bits": 6,
+      "size": 5940000000,
+      "maxRamRequired": 8440000000,
+      "usecase": "very large, extremely low quality loss",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q6_K.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q8_0.gguf",
+      "quantMethod": "Q8_0",
+      "bits": 8,
+      "size": 7700000000,
+      "maxRamRequired": 10020000000,
+      "usecase": "very large, extremely low quality loss - not recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q8_0.gguf"
     }
   ]
 }
