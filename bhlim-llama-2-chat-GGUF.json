@@ -6,7 +6,7 @@
   "longDescription": "GGUF is a new format introduced by the llama.cpp team on August 21st 2023. It is a replacement for GGML, which is no longer supported by llama.cpp. GGUF offers numerous advantages over GGML, such as better tokenisation, and support for special tokens. It is also supports metadata, and is designed to be extensible.",
   "author": "bhlim",
   "version": "1.0.0",
-  "modelUrl": "https://google.com",
+  "modelUrl": "bhlim/llama-2-chat-GGUF",
   "nsfw": false,
   "tags": ["freeform", "tags"],
   "defaultGreeting": "Hello there",
