@@ -1,0 +1,53 @@
+{
+  "id": "TheBloke/zephyr-7B-alpha-GGUF",
+  "name": "zephyr-7B-alpha-GGUF",
+  "shortDescription": "some description",
+  "avatarUrl": "https://aeiljuispo.cloudimg.io/v7/https://cdn-uploads.huggingface.co/production/uploads/6426d3f3a7723d62b53c259b/tvPikpAzKTKGN5wrpadOJ.jpeg?w=200&h=200&f=face",
+  "longDescription": "GGUF is a new format introduced by the llama.cpp team on August 21st 2023. It is a replacement for GGML, which is no longer supported by llama.cpp. GGUF offers numerous advantages over GGML, such as better tokenisation, and support for special tokens. It is also supports metadata, and is designed to be extensible.",
+  "author": "The Bloke",
+  "version": "1.0.0",
+  "modelUrl": "https://huggingface.co/TheBloke/zephyr-7B-alpha-GGUF",
+  "nsfw": false,
+  "tags": ["freeform", "tags"],
+  "defaultGreeting": "Hello there",
+  "type": "LLM",
+  "createdAt": 0,
+  "versions": [
+    {
+      "name": "zephyr-7b-alpha.Q2_K.gguf",
+      "quantMethod": "Q2_K",
+      "bits": 2,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/zephyr-7B-alpha-GGUF/resolve/main/zephyr-7b-alpha.Q2_K.gguf"
+    },
+    {
+      "name": "zephyr-7b-alpha.Q3_K_L.gguf",
+      "quantMethod": "Q3_K_L",
+      "bits": 3,
+      "size": 3820000000,
+      "maxRamRequired": 6320000000,
+      "usecase": "small, substantial quality loss",
+      "downloadLink": "https://huggingface.co/TheBloke/zephyr-7B-alpha-GGUF/resolve/main/zephyr-7b-alpha.Q3_K_L.gguf"
+    },
+    {
+      "name": "zephyr-7b-alpha.Q4_K_M.gguf",
+      "quantMethod": "Q4_K_M",
+      "bits": 4,
+      "size": 4370000000,
+      "maxRamRequired": 6870000000,
+      "usecase": "medium, balanced quality - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/zephyr-7B-alpha-GGUF/resolve/main/zephyr-7b-alpha.Q4_K_M.gguf"
+    },
+    {
+      "name": "zephyr-7b-alpha.Q5_K_M.gguf",
+      "quantMethod": "Q5_K_M",
+      "bits": 5,
+      "size": 5130000000,
+      "maxRamRequired": 7630000000,
+      "usecase": "large, very low quality loss - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/zephyr-7B-alpha-GGUF/resolve/main/zephyr-7b-alpha.Q5_K_M.gguf"
+    }
+  ]
+}
