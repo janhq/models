@@ -21,6 +21,69 @@
       "maxRamRequired": 5580000000,
       "usecase": "smallest, significant quality loss - not recommended for most purposes",
       "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q2_K.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q3_K_L.gguf",
+      "quantMethod": "Q2_K",
+      "bits": 2,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q3_K_L.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q3_K_M.gguf",
+      "quantMethod": "Q3_K_M",
+      "bits": 3,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q3_K_M.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q4_0.gguf",
+      "quantMethod": "Q4",
+      "bits": 4,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_0.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q4_K_M.gguf",
+      "quantMethod": "Q4_K_M",
+      "bits": 4,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q5_0.gguf",
+      "quantMethod": "Q5",
+      "bits": 5,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q5_0.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q5_0.gguf",
+      "quantMethod": "Q6_K",
+      "bits": 6,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q6_K.gguf"
+    },
+    {
+      "name": "mistral-7b-instruct-v0.1.Q8_0.gguf",
+      "quantMethod": "Q8",
+      "bits": 8,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q8_0.gguf"
     }
   ]
 }
