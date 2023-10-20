@@ -59,6 +59,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: ./src
 
+      - uses: gacts/purge-jsdelivr-cache@v1
+        if: github.event_name == 'push' && github.event.pull_request.head.repo.full_name != github.repository
+        with:
+          url: |
+            https://cdn.jsdelivr.net/npm/@janhq/models@latest/dist/index.js
+
       - name: "Commit new version to main and create tag"
         if: github.event_name == 'push' && github.event.pull_request.head.repo.full_name != github.repository
         run: |
