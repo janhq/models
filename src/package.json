@@ -1,6 +1,6 @@
 {
   "name": "@janhq/models",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Model catalogs for Jan",
   "main": "dist/index.js",
   "author": "@janhq",
