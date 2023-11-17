@@ -44,7 +44,7 @@
       "name": "chinese-llama-2-13b.Q5_K_M.gguf",
       "quantMethod": "Q5_K_M",
       "bits": 5,
-      "size": 39410000000,
+      "size": 9410000000,
       "maxRamRequired": 11910000000,
       "usecase": "large, very low quality loss - recommended",
       "downloadLink": "https://huggingface.co/TheBloke/Chinese-Llama-2-13B-GGUF/resolve/main/chinese-llama-2-13b.Q5_K_M.gguf"
