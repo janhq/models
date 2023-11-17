@@ -42,7 +42,7 @@
     },
     {
       "name": "mistral-7b-instruct-v0.1.Q5_K_S.gguf",
-      "quantMethod": "Q5",
+      "quantMethod": "Q5_K_S",
       "bits": 5,
       "size": 5000000000,
       "maxRamRequired": 7500000000,
@@ -50,7 +50,7 @@
       "downloadLink": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q5_K_S.gguf"
     },
     {
-      "name": "mistral-7b-instruct-v0.1.Q5_K_S.gguf",
+      "name": "mistral-7b-instruct-v0.1.Q6_K.gguf",
       "quantMethod": "Q6_K",
       "bits": 6,
       "size": 5940000000,
