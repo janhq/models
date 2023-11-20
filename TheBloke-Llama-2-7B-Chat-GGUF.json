@@ -18,7 +18,7 @@
       "quantMethod": "Q2_K",
       "bits": 2,
       "size": 2830000000,
-      "maxRamRequired": 5580000000,
+      "maxRamRequired": 5330000000,
       "usecase": "smallest, significant quality loss - not recommended for most purposes",
       "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q2_K.gguf"
     },
@@ -27,7 +27,7 @@
       "quantMethod": "Q3_K_L",
       "bits": 3,
       "size": 3600000000,
-      "maxRamRequired": 6020000000,
+      "maxRamRequired": 6100000000,
       "usecase": "small, substantial quality loss",
       "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q3_K_L.gguf"
     },
@@ -36,7 +36,7 @@
       "quantMethod": "Q4_K_M",
       "bits": 4,
       "size": 4080000000,
-      "maxRamRequired": 10370000000,
+      "maxRamRequired": 6580000000,
       "usecase": "medium, balanced quality - recommended",
       "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf"
     },
@@ -45,7 +45,7 @@
       "quantMethod": "Q5_K_M",
       "bits": 5,
       "size": 4780000000,
-      "maxRamRequired": 7630000000,
+      "maxRamRequired": 7280000000,
       "usecase": "large, very low quality loss - recommended",
       "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q5_K_M.gguf"
     }
