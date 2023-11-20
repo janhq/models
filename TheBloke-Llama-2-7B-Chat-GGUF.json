@@ -1,0 +1,53 @@
+{
+  "id": "TheBloke/Llama-2-7B-Chat-GGUF",
+  "name": "Llama-2-7B-Chat-GGUF",
+  "shortDescription": "Llama 2 7B Chat - GGUF",
+  "avatarUrl": "https://aeiljuispo.cloudimg.io/v7/https://cdn-uploads.huggingface.co/production/uploads/6426d3f3a7723d62b53c259b/tvPikpAzKTKGN5wrpadOJ.jpeg?w=200&h=200&f=face",
+  "longDescription": "Llama 2 is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 70 billion parameters. This is the repository for the 7B fine-tuned model, optimized for dialogue use cases and converted for the Hugging Face Transformers format. Links to other models can be found in the index at the bottom.",
+  "author": "The Bloke",
+  "version": "1.0.0",
+  "modelUrl": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF",
+  "nsfw": false,
+  "tags": ["freeform", "tags"],
+  "defaultGreeting": "Hello there",
+  "type": "LLM",
+  "createdAt": 0,
+  "versions": [
+    {
+      "name": "llama-2-7b-chat.Q2_K.gguf",
+      "quantMethod": "Q2_K",
+      "bits": 2,
+      "size": 2830000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q2_K.gguf"
+    },
+    {
+      "name": "llama-2-7b-chat.Q3_K_L.gguf",
+      "quantMethod": "Q3_K_L",
+      "bits": 3,
+      "size": 3600000000,
+      "maxRamRequired": 6020000000,
+      "usecase": "small, substantial quality loss",
+      "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q3_K_L.gguf"
+    },
+    {
+      "name": "llama-2-7b-chat.Q4_K_M.gguf",
+      "quantMethod": "Q4_K_M",
+      "bits": 4,
+      "size": 4080000000,
+      "maxRamRequired": 10370000000,
+      "usecase": "medium, balanced quality - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf"
+    },
+    {
+      "name": "llama-2-7b-chat.Q5_K_M",
+      "quantMethod": "Q5_K_M",
+      "bits": 5,
+      "size": 4780000000,
+      "maxRamRequired": 7630000000,
+      "usecase": "large, very low quality loss - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q5_K_M.gguf"
+    }
+  ]
+}
