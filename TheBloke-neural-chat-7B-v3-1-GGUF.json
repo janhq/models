@@ -1,0 +1,53 @@
+{
+  "id": "TheBloke/neural-chat-7B-v3-1-GGUF",
+  "name": "neural-chat-7B-v3-1-GGUF",
+  "shortDescription": "This model is a fine-tuned model for Chat based on mosaicml/mpt-7b with max_seq_lenght=2048 on various open source dataset. For the details of the used dataset, please refer to Intel/neural-chat-dataset-v1-1.",
+  "avatarUrl": "https://aeiljuispo.cloudimg.io/v7/https://cdn-uploads.huggingface.co/production/uploads/6426d3f3a7723d62b53c259b/tvPikpAzKTKGN5wrpadOJ.jpeg?w=200&h=200&f=face",
+  "longDescription": "neural-chat-7b-v1-1 can produce factually incorrect output, and should not be relied on to produce factually accurate information. neural-chat-7b-v1-1 was trained on various instruction/chat datasets based on mosaicml/mpt-7b. Because of the limitations of the pretrained model and the finetuning datasets, it is possible that this model could generate lewd, biased or otherwise offensive outputs. Therefore, before deploying any applications of neural-chat-7b-v1-1, developers should perform safety testing. Converted to GGUF by TheBloke.",
+  "author": "Intel",
+  "version": "1.0.0",
+  "modelUrl": "https://huggingface.co/TheBloke/neural-chat-7B-v3-1-GGUF",
+  "nsfw": false,
+  "tags": ["freeform", "tags"],
+  "defaultGreeting": "Hello there",
+  "type": "LLM",
+  "createdAt": 0,
+  "versions": [
+    {
+      "name": "neural-chat-7b-v3-1.Q2_K.gguf",
+      "quantMethod": "Q2_K",
+      "bits": 2,
+      "size": 3080000000,
+      "maxRamRequired": 5580000000,
+      "usecase": "smallest, significant quality loss - not recommended for most purposes",
+      "downloadLink": "https://huggingface.co/TheBloke/neural-chat-7B-v3-1-GGUF/resolve/main/neural-chat-7b-v3-1.Q2_K.gguf"
+    },
+    {
+      "name": "neural-chat-7b-v3-1.Q3_K_L.gguf",
+      "quantMethod": "Q3_K_L",
+      "bits": 3,
+      "size": 3820000000,
+      "maxRamRequired": 6320000000,
+      "usecase": "small, substantial quality loss",
+      "downloadLink": "https://huggingface.co/TheBloke/neural-chat-7B-v3-1-GGUF/resolve/main/neural-chat-7b-v3-1.Q3_K_L.gguf"
+    },
+    {
+      "name": "neural-chat-7b-v3-1.Q4_K_M.gguf",
+      "quantMethod": "Q4_K_M",
+      "bits": 4,
+      "size": 4370000000,
+      "maxRamRequired": 6870000000,
+      "usecase": "medium, balanced quality - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/neural-chat-7B-v3-1-GGUF/resolve/main/neural-chat-7b-v3-1.Q4_K_M.gguf"
+    },
+    {
+      "name": "neural-chat-7b-v3-1.Q5_K_M.gguf",
+      "quantMethod": "Q5_K_M",
+      "bits": 5,
+      "size": 5130000000,
+      "maxRamRequired": 7630000000,
+      "usecase": "large, very low quality loss - recommended",
+      "downloadLink": "https://huggingface.co/TheBloke/neural-chat-7B-v3-1-GGUF/resolve/main/neural-chat-7b-v3-1.Q5_K_M.gguf"
+    }
+  ]
+}
