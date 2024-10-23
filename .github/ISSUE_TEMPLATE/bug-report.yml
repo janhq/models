@@ -1,0 +1,47 @@
+name: GitHub Action Bug Report
+description: Report issues with GitHub Actions workflow
+title: "[ACTION BUG]: "
+labels: ["bug", "github-actions"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue with our GitHub Action! This will help us improve the workflow.
+
+  - type: textarea
+    id: error_output
+    attributes:
+      label: Error Output
+      description: Please provide the GitHub Actions error output
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: mode_name
+    attributes:
+      label: Model Name
+      description: Which model are you converting?
+      placeholder: Describe the model and its release date
+    validations:
+      required: true
+
+  - type: input
+    id: llama_issue_ref
+    attributes:
+      label: Related llama.cpp Issue/PR
+      description: Find related llama.cpp issue or PR to the model you are converting
+      placeholder: "https://github.com/ggerganov/llama.cpp/issues/XXX"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: |
+        - Custom build flags used
+        - Modified parameters
+        - System specifications
+        - Any other relevant information
