@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting an issue with our GitHub Action! This will help us improve the workflow.
+        Thanks for reporting an issue with our GitHub Action!
 
   - type: textarea
     id: error_output
@@ -14,6 +14,15 @@ body:
       label: Error Output
       description: Please provide the GitHub Actions error output
       render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: action_issue_url
+    attributes:
+      label: Coresponding Action Issue
+      description: Link to the issue in the action repository
+      placeholder: "https://github.com/XXX"
     validations:
       required: true
 
