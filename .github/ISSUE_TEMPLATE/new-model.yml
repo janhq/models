@@ -1,0 +1,78 @@
+name: "New Model"
+description: "Request a new model to be converted"
+title: "feat: [MODEL_NAME]"
+labels: ["type: model request", "new model"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting a model request!
+
+  - type: input
+    id: model_name
+    attributes:
+      label: Model Name
+      description: The name of the model you want to be added
+      placeholder: "e.g., homebrewltd/mini-Ichigo-llama3.2-3B-s-instruct"
+    validations:
+      required: true
+
+  - type: input
+    id: model_source
+    attributes:
+      label: Model Source
+      description: Link to the model (HuggingFace)
+      placeholder: "https://huggingface.co/XXX"
+    validations:
+      required: true
+
+  - type: input
+    id: model_repo
+    attributes:
+      label: Model Cortexso HuggingFace Repo
+      description: Link to the model (HuggingFace)
+      placeholder: "https://huggingface.co/XXX"
+    validations:
+      required: true
+
+  - type: textarea
+    id: model_description
+    attributes:
+      label: Model Description
+      description: Brief description of the model and why it should be added
+      placeholder: |
+        - Why would it be valuable to include?
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: "Requested Formats"
+      description: "Which model formats to be converted into?"
+      options:
+        - label: GGUF (llama.cpp)
+        - label: TensorRT (TensorRT-LLM)
+        - label: ONNX (Onnx Runtime)
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: Additional Information
+      description: Any other relevant information about the model
+      placeholder: |
+        - Special requirements or dependencies
+        - Known limitations or issues
+        - Benchmark results (if available)
+        - Other relevant details
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have created model.yml and metadata.yml files on cortex.so HugginFace repo
+          required: true
+        - label: I have run the model through the model conversion pipeline
+          required: true
+        - label: I have tested the model
+          required: true
