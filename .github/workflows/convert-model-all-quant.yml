@@ -30,6 +30,7 @@ env:
 jobs:
   converter:
     runs-on: ubuntu-20-04-gguf
+    timeout-minutes: 7200
     steps:
       - name: Checkout
         uses: actions/checkout@v4 # v4.1.7
