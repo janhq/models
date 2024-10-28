@@ -26,7 +26,8 @@ env:
 
 jobs:
   create-repo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20-04-gguf
+    timeout-minutes: 7200
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +36,21 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - name: Cache Python packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.local/share/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
           pip install huggingface_hub PyYAML
+          git lfs install
 
       - name: Create model.yml
         run: |
