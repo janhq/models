@@ -1,4 +1,4 @@
-name: GitHub Action Bug Report
+name: 🐛 Bug Report
 description: Report issues with GitHub Actions workflow
 title: "[ACTION BUG]: "
 labels: ["bug", "github-actions"]
@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting an issue with our GitHub Action!
+        Describe an issue with our GitHub Action!
 
   - type: textarea
     id: error_output
@@ -26,12 +26,12 @@ body:
     validations:
       required: true
 
-  - type: textarea
+  - type: input
     id: mode_name
     attributes:
       label: Model Name
       description: Which model are you converting?
-      placeholder: Describe the model and its release date
+      placeholder: Huggingface URL of the model
     validations:
       required: true
 

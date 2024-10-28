@@ -1,4 +1,4 @@
-name: "New Model"
+name: "🤖 New Model"
 description: "Request a new model to be converted"
 title: "feat: [MODEL_NAME]"
 labels: ["type: model request", "new model"]
@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for submitting a model request!
+        Submitting a model request!
 
   - type: input
     id: model_name
@@ -31,7 +31,7 @@ body:
     attributes:
       label: Model Cortexso HuggingFace Repo
       description: Link to the model (HuggingFace)
-      placeholder: "https://huggingface.co/XXX"
+      placeholder: "https://huggingface.co/cortexso/XXX"
     validations:
       required: true
 
@@ -39,9 +39,9 @@ body:
     id: model_description
     attributes:
       label: Model Description
-      description: Brief description of the model and why it should be added
+      description: Brief description of the model
       placeholder: |
-        - Why would it be valuable to include?
+        - XXX is a family of models that are designed to be used for YYY
     validations:
       required: true
 
@@ -71,8 +71,8 @@ body:
       label: Confirmation
       options:
         - label: I have created model.yml and metadata.yml files on cortex.so HugginFace repo
-          required: true
+          required: false
         - label: I have run the model through the model conversion pipeline
-          required: true
+          required: false
         - label: I have tested the model
-          required: true
+          required: false
