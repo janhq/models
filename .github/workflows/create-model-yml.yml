@@ -1,0 +1,141 @@
+name: Create HuggingFace Model Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: "Name of the model to create (will be used in repo name and files)"
+        required: true
+        type: string
+      prompt_template:
+        description: "Prompt template for the model"
+        required: true
+        type: string
+      stop_tokens:
+        description: "Stop tokens for the model (comma-separated)"
+        required: true
+        type: string
+      engine:
+        description: "Engine to run the model (e.g., llama-cpp)"
+        required: true
+        type: string
+
+env:
+  USER_NAME: cortexso
+  MODEL_NAME: ${{ inputs.model_name }}
+
+jobs:
+  create-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install huggingface_hub PyYAML
+
+      - name: Create model.yml
+        run: |
+          cat << EOF > model.yml
+          # BEGIN GENERAL GGUF METADATA
+          id: ${{ env.MODEL_NAME }}
+          model: ${{ env.MODEL_NAME }}
+          name: ${{ env.MODEL_NAME }}
+          version: 1
+
+          # END GENERAL GGUF METADATA
+
+          # BEGIN INFERENCE PARAMETERS
+          # BEGIN REQUIRED
+          stop:
+            - ${{ inputs.stop_tokens }}
+          # END REQUIRED
+
+          # BEGIN OPTIONAL
+          stream: true
+          top_p: 0.9
+          temperature: 0.7
+          frequency_penalty: 0
+          presence_penalty: 0
+          max_tokens: 4096
+          seed: -1
+          dynatemp_range: 0
+          dynatemp_exponent: 1
+          top_k: 40
+          min_p: 0.05
+          tfs_z: 1
+          typ_p: 1
+          repeat_last_n: 64
+          repeat_penalty: 1
+          mirostat: false
+          mirostat_tau: 5
+          mirostat_eta: 0.100000001
+          penalize_nl: false
+          ignore_eos: false
+          n_probs: 0
+          min_keep: 0
+          # END OPTIONAL
+          # END INFERENCE PARAMETERS
+
+          # BEGIN MODEL LOAD PARAMETERS
+          # BEGIN REQUIRED
+          engine: ${{ inputs.engine }}
+          prompt_template: ${{ inputs.prompt_template }}
+          ctx_len: 4096
+          ngl: 34
+          # END OPTIONAL
+          # END MODEL LOAD PARAMETERS
+          EOF
+
+      - name: Create metadata.yml
+        run: |
+          cat << EOF > metadata.yml
+          version: 1
+          name: ${{ env.MODEL_NAME }}
+          default: 8b-gguf-q4-km
+          EOF
+
+      - name: Create HuggingFace Repository and Upload Files
+        env:
+          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN_WRITE }}
+        run: |
+          python3 - << EOF
+          from huggingface_hub import HfApi, create_repo
+          import os
+
+          # Initialize the Hugging Face API
+          api = HfApi(token=os.environ['HF_TOKEN'])
+
+          # Create the repository
+          repo_id = f"${{ env.USER_NAME }}/${{ env.MODEL_NAME }}"
+          try:
+              create_repo(repo_id, private=False, token=os.environ['HF_TOKEN'])
+              print(f"Created repository: {repo_id}")
+          except Exception as e:
+              print(f"Repository might already exist or error occurred: {e}")
+
+          # Upload the files
+          api.upload_file(
+              path_or_fileobj="model.yml",
+              path_in_repo="model.yml",
+              repo_id=repo_id,
+              token=os.environ['HF_TOKEN']
+          )
+          api.upload_file(
+              path_or_fileobj="metadata.yml",
+              path_in_repo="metadata.yml",
+              repo_id=repo_id,
+              token=os.environ['HF_TOKEN']
+          )
+          print("Files uploaded successfully")
+          EOF
+
+      - name: Cleanup
+        run: |
+          rm -f model.yml metadata.yml
