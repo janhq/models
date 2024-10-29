@@ -48,6 +48,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      
       - name: Cache Python packages
         uses: actions/cache@v4
         with:
@@ -66,6 +67,13 @@ jobs:
 
       - name: Create model.yml
         run: |
+          # Process stop tokens: split by comma and create YAML format
+          STOP_TOKENS_YAML=""
+          IFS=',' read -ra TOKENS <<< "${{ env.STOP_TOKENS }}"
+          for token in "${TOKENS[@]}"; do
+            STOP_TOKENS_YAML+="            - ${token}\n"
+          done
+          
           cat << EOF > model.yml
           # BEGIN GENERAL GGUF METADATA
           id: ${{ env.MODEL_NAME }}
@@ -78,7 +86,7 @@ jobs:
           # BEGIN INFERENCE PARAMETERS
           # BEGIN REQUIRED
           stop:
-            - ${{ inputs.stop_tokens }}
+          ${STOP_TOKENS_YAML}
           # END REQUIRED
 
           # BEGIN OPTIONAL
@@ -109,8 +117,8 @@ jobs:
 
           # BEGIN MODEL LOAD PARAMETERS
           # BEGIN REQUIRED
-          engine: ${{ inputs.engine }}
-          prompt_template: ${{ inputs.prompt_template }}
+          engine: ${{ env.ENGINE }}
+          prompt_template: ${{ env.PROMPT_TEMPLATE }}
           ctx_len: 4096
           ngl: 34
           # END OPTIONAL
