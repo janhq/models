@@ -1,40 +1,36 @@
 name: Create HuggingFace Model Repository
 
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       model_name:
-#         description: "Name of the model to create (will be used in repo name and files)"
-#         required: true
-#         type: string
-#       prompt_template:
-#         description: "Prompt template for the model"
-#         required: true
-#         type: string
-#       stop_tokens:
-#         description: "Stop tokens for the model (comma-separated)"
-#         required: true
-#         type: string
-#       engine:
-#         description: "Engine to run the model (e.g., llama-cpp)"
-#         required: true
-#         type: string
-
-# env:
-#   USER_NAME: cortexso
-#   MODEL_NAME: ${{ inputs.model_name }}
+name: Create HuggingFace Model Repository
 
 on:
-  push:
-    branches:
-      - add/create_modelyml_workflow
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: "Name of the model to create (will be used in repo name and files)"
+        required: true
+        type: string
+      prompt_template:
+        description: "Prompt template for the model"
+        required: true
+        type: string
+        default: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"
+      stop_tokens:
+        description: "Stop tokens for the model (comma-separated, e.g., <|im_end|>,</s>)"
+        required: true
+        type: string
+        default: "<|im_end|>"
+      engine:
+        description: "Engine to run the model (e.g., llama-cpp)"
+        required: true
+        type: string
+        default: "llama-cpp"
 
 env:
   USER_NAME: cortexso
-  MODEL_NAME: "test-model"  # Default test value
-  PROMPT_TEMPLATE: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"  # Default test value
-  STOP_TOKENS: "<|im_end|>"  # Default test value
-  ENGINE: "llama-cpp"  # Default test value
+  MODEL_NAME: ${{ inputs.model_name }}
+  PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
+  STOP_TOKENS: ${{ inputs.stop_tokens }}
+  ENGINE: ${{ inputs.engine }}
 
 jobs:
   create-repo:
