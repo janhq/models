@@ -9,7 +9,7 @@ env:
   USER_NAME: cortexso
   MODEL_NAME: "phi-3.5"  # Default test value
   PROMPT_TEMPLATE: "<|system|> {system_prompt}<|end|><|user|> {prompt}<|end|><|assistant|>"  # Default test value
-  STOP_TOKENS: "<|end|>>"  # Default stop token
+  STOP_TOKENS: "<|end|>"  # Default stop token
   ENGINE: "llama-cpp"  # Default test value
 
 jobs:
@@ -164,7 +164,7 @@ jobs:
           }
 
           with open('metadata.yml', 'w') as f:
-              yaml.dump(metadata_content, Dumper=CustomDumper, default_flow_style=False)
+              write_section(f, metadata_content) 
           EOF
 
       - name: Create HuggingFace Repository and Upload Files
