@@ -33,7 +33,7 @@ env:
   USER_NAME: cortexso
   MODEL_NAME: "test-model"  # Default test value
   PROMPT_TEMPLATE: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"  # Default test value
-  STOP_TOKENS: "<|im_end|>"  # Default test value
+  STOP_TOKENS: "<|im_end|>,</s>"  # Default test value
   ENGINE: "llama-cpp"  # Default test value
 
 jobs:
@@ -70,9 +70,17 @@ jobs:
           # Process stop tokens: split by comma and create YAML format
           STOP_TOKENS_YAML=""
           IFS=',' read -ra TOKENS <<< "${{ env.STOP_TOKENS }}"
-          for token in "${TOKENS[@]}"; do
-            STOP_TOKENS_YAML+="            - ${token}\n"
-          done
+          if [ ${#TOKENS[@]} -eq 1 ]; then
+            STOP_TOKENS_YAML="            - ${TOKENS[0]}"
+          else
+            for token in "${TOKENS[@]}"; do
+              if [ -n "$STOP_TOKENS_YAML" ]; then
+                STOP_TOKENS_YAML+="\n            - ${token}"
+              else
+                STOP_TOKENS_YAML="            - ${token}"
+              fi
+            done
+          fi
           
           cat << EOF > model.yml
           # BEGIN GENERAL GGUF METADATA
@@ -118,7 +126,7 @@ jobs:
           # BEGIN MODEL LOAD PARAMETERS
           # BEGIN REQUIRED
           engine: ${{ env.ENGINE }}
-          prompt_template: ${{ env.PROMPT_TEMPLATE }}
+          prompt_template: "${{ env.PROMPT_TEMPLATE }}"
           ctx_len: 4096
           ngl: 34
           # END OPTIONAL
