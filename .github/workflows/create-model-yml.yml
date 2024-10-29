@@ -45,6 +45,7 @@ jobs:
         run: |
           python3 - << EOF
           import yaml
+          import os
           from yaml.representer import SafeRepresenter
 
           class CustomDumper(yaml.SafeDumper):
