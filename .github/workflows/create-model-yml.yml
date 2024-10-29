@@ -74,7 +74,7 @@ jobs:
             # Remove any leading/trailing whitespace
             token=$(echo "$token" | xargs)
             if [ ! -z "$token" ]; then
-              STOP_TOKENS_YAML+="            - $token"
+              STOP_TOKENS_YAML+="  - $token"
               # Only add newline if it's not the last token
               if [ "$token" != "${TOKENS[-1]}" ]; then
                 STOP_TOKENS_YAML+="\n"
