@@ -70,17 +70,20 @@ jobs:
           # Process stop tokens: split by comma and create YAML format
           STOP_TOKENS_YAML=""
           IFS=',' read -ra TOKENS <<< "${{ env.STOP_TOKENS }}"
-          if [ ${#TOKENS[@]} -eq 1 ]; then
-            STOP_TOKENS_YAML="            - ${TOKENS[0]}"
-          else
-            for token in "${TOKENS[@]}"; do
-              if [ -n "$STOP_TOKENS_YAML" ]; then
-                STOP_TOKENS_YAML+="\n            - ${token}"
-              else
-                STOP_TOKENS_YAML="            - ${token}"
+          for token in "${TOKENS[@]}"; do
+            # Remove any leading/trailing whitespace
+            token=$(echo "$token" | xargs)
+            if [ ! -z "$token" ]; then
+              STOP_TOKENS_YAML+="            - $token"
+              # Only add newline if it's not the last token
+              if [ "$token" != "${TOKENS[-1]}" ]; then
+                STOP_TOKENS_YAML+="\n"
               fi
-            done
-          fi
+            fi
+          done
+          
+          # Escape the prompt template properly while preserving newlines
+          ESCAPED_PROMPT_TEMPLATE=$(echo '${{ env.PROMPT_TEMPLATE }}' | sed 's/"/\\"/g')
           
           cat << EOF > model.yml
           # BEGIN GENERAL GGUF METADATA
@@ -126,7 +129,7 @@ jobs:
           # BEGIN MODEL LOAD PARAMETERS
           # BEGIN REQUIRED
           engine: ${{ env.ENGINE }}
-          prompt_template: "${{ env.PROMPT_TEMPLATE }}"
+          prompt_template: "${ESCAPED_PROMPT_TEMPLATE}"
           ctx_len: 4096
           ngl: 34
           # END OPTIONAL
