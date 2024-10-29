@@ -7,9 +7,9 @@ on:
 
 env:
   USER_NAME: cortexso
-  MODEL_NAME: "test-model"  # Default test value
-  PROMPT_TEMPLATE: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"  # Default test value
-  STOP_TOKENS: "<|im_end|>"  # Default stop token
+  MODEL_NAME: "phi-3.5"  # Default test value
+  PROMPT_TEMPLATE: "<|system|> {system_prompt}<|end|><|user|> {prompt}<|end|><|assistant|>"  # Default test value
+  STOP_TOKENS: "<|end|>>"  # Default stop token
   ENGINE: "llama-cpp"  # Default test value
 
 jobs:
