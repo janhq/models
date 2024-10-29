@@ -33,7 +33,7 @@ env:
   USER_NAME: cortexso
   MODEL_NAME: "test-model"  # Default test value
   PROMPT_TEMPLATE: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"  # Default test value
-  STOP_TOKENS: "<|im_end|>,</s>"  # Default test value
+  STOP_TOKENS: "<|im_end|>"  # Default test value
   ENGINE: "llama-cpp"  # Default test value
 
 jobs:
