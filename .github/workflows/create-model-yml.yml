@@ -65,83 +65,98 @@ jobs:
           pip install huggingface_hub PyYAML
           git lfs install
 
-      - name: Create model.yml
+      - name: Create YAML files
         run: |
-          # Process stop tokens: split by comma and create YAML format
-          STOP_TOKENS_YAML=""
-          IFS=',' read -ra TOKENS <<< "${{ env.STOP_TOKENS }}"
-          for token in "${TOKENS[@]}"; do
-            # Remove any leading/trailing whitespace
-            token=$(echo "$token" | xargs)
-            if [ ! -z "$token" ]; then
-              STOP_TOKENS_YAML+="  - $token"
-              # Only add newline if it's not the last token
-              if [ "$token" != "${TOKENS[-1]}" ]; then
-                STOP_TOKENS_YAML+="\n"
-              fi
-            fi
-          done
-          
-          # Escape the prompt template properly while preserving newlines
-          ESCAPED_PROMPT_TEMPLATE=$(echo '${{ env.PROMPT_TEMPLATE }}' | sed 's/"/\\"/g')
-          
-          cat << EOF > model.yml
-          # BEGIN GENERAL GGUF METADATA
-          id: ${{ env.MODEL_NAME }}
-          model: ${{ env.MODEL_NAME }}
-          name: ${{ env.MODEL_NAME }}
-          version: 1
+          python3 - << EOF
+          import yaml
+          import os
 
-          # END GENERAL GGUF METADATA
+          # Function to create a custom string representer
+          def quoted_presenter(dumper, data):
+              return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
 
-          # BEGIN INFERENCE PARAMETERS
-          # BEGIN REQUIRED
-          stop:
-          ${STOP_TOKENS_YAML}
-          # END REQUIRED
+          # Register the custom presenter
+          yaml.add_representer(str, quoted_presenter)
 
-          # BEGIN OPTIONAL
-          stream: true
-          top_p: 0.9
-          temperature: 0.7
-          frequency_penalty: 0
-          presence_penalty: 0
-          max_tokens: 4096
-          seed: -1
-          dynatemp_range: 0
-          dynatemp_exponent: 1
-          top_k: 40
-          min_p: 0.05
-          tfs_z: 1
-          typ_p: 1
-          repeat_last_n: 64
-          repeat_penalty: 1
-          mirostat: false
-          mirostat_tau: 5
-          mirostat_eta: 0.100000001
-          penalize_nl: false
-          ignore_eos: false
-          n_probs: 0
-          min_keep: 0
-          # END OPTIONAL
-          # END INFERENCE PARAMETERS
+          # Process stop tokens
+          stop_tokens = os.environ['STOP_TOKENS'].split(',')
+          stop_tokens = [token.strip() for token in stop_tokens if token.strip()]
 
-          # BEGIN MODEL LOAD PARAMETERS
-          # BEGIN REQUIRED
-          engine: ${{ env.ENGINE }}
-          prompt_template: "${ESCAPED_PROMPT_TEMPLATE}"
-          ctx_len: 4096
-          ngl: 34
-          # END OPTIONAL
-          # END MODEL LOAD PARAMETERS
-          EOF
+          # Create model.yml content
+          model_content = {
+              'id': os.environ['MODEL_NAME'],
+              'model': os.environ['MODEL_NAME'],
+              'name': os.environ['MODEL_NAME'],
+              'version': 1,
+              'stop': stop_tokens,
+              'stream': True,
+              'top_p': 0.9,
+              'temperature': 0.7,
+              'frequency_penalty': 0,
+              'presence_penalty': 0,
+              'max_tokens': 4096,
+              'seed': -1,
+              'dynatemp_range': 0,
+              'dynatemp_exponent': 1,
+              'top_k': 40,
+              'min_p': 0.05,
+              'tfs_z': 1,
+              'typ_p': 1,
+              'repeat_last_n': 64,
+              'repeat_penalty': 1,
+              'mirostat': False,
+              'mirostat_tau': 5,
+              'mirostat_eta': 0.100000001,
+              'penalize_nl': False,
+              'ignore_eos': False,
+              'n_probs': 0,
+              'min_keep': 0,
+              'engine': os.environ['ENGINE'],
+              'prompt_template': os.environ['PROMPT_TEMPLATE'],
+              'ctx_len': 4096,
+              'ngl': 34
+          }
 
-      - name: Create metadata.yml
-        run: |
-          cat << EOF > metadata.yml
-          version: 1
-          name: ${{ env.MODEL_NAME }}
-          default: 8b-gguf-q4-km
+          # Create the model.yml file with proper sections and comments
+          with open('model.yml', 'w') as f:
+              f.write("# BEGIN GENERAL GGUF METADATA\n")
+              yaml.dump({k: model_content[k] for k in ['id', 'model', 'name', 'version']}, 
+                       f, default_flow_style=False, sort_keys=False)
+              f.write("\n# END GENERAL GGUF METADATA\n\n")
+              
+              f.write("# BEGIN INFERENCE PARAMETERS\n# BEGIN REQUIRED\n")
+              yaml.dump({'stop': model_content['stop']}, f, default_flow_style=False)
+              f.write("# END REQUIRED\n\n")
+              
+              f.write("# BEGIN OPTIONAL\n")
+              optional_params = dict((k, model_content[k]) for k in [
+                  'stream', 'top_p', 'temperature', 'frequency_penalty',
+                  'presence_penalty', 'max_tokens', 'seed', 'dynatemp_range',
+                  'dynatemp_exponent', 'top_k', 'min_p', 'tfs_z', 'typ_p',
+                  'repeat_last_n', 'repeat_penalty', 'mirostat', 'mirostat_tau',
+                  'mirostat_eta', 'penalize_nl', 'ignore_eos', 'n_probs', 'min_keep'
+              ])
+              yaml.dump(optional_params, f, default_flow_style=False)
+              f.write("# END OPTIONAL\n")
+              f.write("# END INFERENCE PARAMETERS\n\n")
+              
+              f.write("# BEGIN MODEL LOAD PARAMETERS\n# BEGIN REQUIRED\n")
+              required_params = dict((k, model_content[k]) for k in [
+                  'engine', 'prompt_template', 'ctx_len', 'ngl'
+              ])
+              yaml.dump(required_params, f, default_flow_style=False)
+              f.write("# END OPTIONAL\n")
+              f.write("# END MODEL LOAD PARAMETERS\n")
+
+          # Create metadata.yml content
+          metadata_content = {
+              'version': 1,
+              'name': os.environ['MODEL_NAME'],
+              'default': '8b-gguf-q4-km'
+          }
+
+          with open('metadata.yml', 'w') as f:
+              yaml.dump(metadata_content, f, default_flow_style=False)
           EOF
 
       - name: Create HuggingFace Repository and Upload Files
