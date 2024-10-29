@@ -1,28 +1,40 @@
 name: Create HuggingFace Model Repository
 
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       model_name:
+#         description: "Name of the model to create (will be used in repo name and files)"
+#         required: true
+#         type: string
+#       prompt_template:
+#         description: "Prompt template for the model"
+#         required: true
+#         type: string
+#       stop_tokens:
+#         description: "Stop tokens for the model (comma-separated)"
+#         required: true
+#         type: string
+#       engine:
+#         description: "Engine to run the model (e.g., llama-cpp)"
+#         required: true
+#         type: string
+
+# env:
+#   USER_NAME: cortexso
+#   MODEL_NAME: ${{ inputs.model_name }}
+
 on:
-  workflow_dispatch:
-    inputs:
-      model_name:
-        description: "Name of the model to create (will be used in repo name and files)"
-        required: true
-        type: string
-      prompt_template:
-        description: "Prompt template for the model"
-        required: true
-        type: string
-      stop_tokens:
-        description: "Stop tokens for the model (comma-separated)"
-        required: true
-        type: string
-      engine:
-        description: "Engine to run the model (e.g., llama-cpp)"
-        required: true
-        type: string
+  push:
+    branches:
+      - add/create_modelyml_workflow
 
 env:
   USER_NAME: cortexso
-  MODEL_NAME: ${{ inputs.model_name }}
+  MODEL_NAME: "test-model"  # Default test value
+  PROMPT_TEMPLATE: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"  # Default test value
+  STOP_TOKENS: "<|im_end|>"  # Default test value
+  ENGINE: "llama-cpp"  # Default test value
 
 jobs:
   create-repo:
