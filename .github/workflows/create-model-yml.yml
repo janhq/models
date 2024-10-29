@@ -1,7 +1,5 @@
 name: Create HuggingFace Model Repository
 
-name: Create HuggingFace Model Repository
-
 on:
   workflow_dispatch:
     inputs:
