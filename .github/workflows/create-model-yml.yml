@@ -1,17 +1,34 @@
 name: Create HuggingFace Model Repository
 
 on:
-  push:
-    branches:
-      - update/action_create_hfrepo  # Replace with your actual branch name
-
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: "Name of the model to create (will be used in repo name and files)"
+        required: true
+        type: string
+      prompt_template:
+        description: "Prompt template for the model"
+        required: true
+        type: string
+        default: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"
+      stop_tokens:
+        description: "Stop tokens for the model (comma-separated, e.g., <|im_end|>,</s>)"
+        required: true
+        type: string
+        default: "<|im_end|>"
+      engine:
+        description: "Engine to run the model (e.g., llama-cpp)"
+        required: true
+        type: string
+        default: "llama-cpp"
 env:
   USER_NAME: cortexso
-  MODEL_NAME: "phi-3.5"  # Default test value
-  PROMPT_TEMPLATE: "<|system|> {system_prompt}<|end|><|user|> {prompt}<|end|><|assistant|>"  # Default test value
-  STOP_TOKENS: "<|end|>"  # Default stop token
-  ENGINE: "llama-cpp"  # Default test value
-
+  MODEL_NAME: ${{ inputs.model_name }}
+  PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
+  STOP_TOKENS: ${{ inputs.stop_tokens }}
+  ENGINE: ${{ inputs.engine }}
+  
 jobs:
   create-repo:
     runs-on: ubuntu-20-04-gguf
