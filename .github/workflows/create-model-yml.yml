@@ -22,14 +22,13 @@ on:
         required: true
         type: string
         default: "llama-cpp"
-
 env:
   USER_NAME: cortexso
   MODEL_NAME: ${{ inputs.model_name }}
   PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
   STOP_TOKENS: ${{ inputs.stop_tokens }}
   ENGINE: ${{ inputs.engine }}
-
+  
 jobs:
   create-repo:
     runs-on: ubuntu-20-04-gguf
@@ -64,85 +63,117 @@ jobs:
           python3 - << EOF
           import yaml
           import os
+          from yaml.representer import SafeRepresenter
 
-          # Function to create a custom string representer
-          def quoted_presenter(dumper, data):
-              return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+          class CustomDumper(yaml.SafeDumper):
+              pass
 
-          # Register the custom presenter
-          yaml.add_representer(str, quoted_presenter)
+          def custom_str_representer(dumper, data):
+              if isinstance(data, str):
+                  return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='')
+              return SafeRepresenter.represent_str(dumper, data)
+
+          CustomDumper.add_representer(str, custom_str_representer)
+
+          def dict_representer(dumper, data):
+              return dumper.represent_dict(data.items())
+
+          CustomDumper.add_representer(dict, dict_representer)
 
           # Process stop tokens
           stop_tokens = os.environ['STOP_TOKENS'].split(',')
           stop_tokens = [token.strip() for token in stop_tokens if token.strip()]
 
-          # Create model.yml content
-          model_content = {
-              'id': os.environ['MODEL_NAME'],
-              'model': os.environ['MODEL_NAME'],
-              'name': os.environ['MODEL_NAME'],
-              'version': 1,
-              'stop': stop_tokens,
-              'stream': True,
-              'top_p': 0.9,
-              'temperature': 0.7,
-              'frequency_penalty': 0,
-              'presence_penalty': 0,
-              'max_tokens': 4096,
-              'seed': -1,
-              'dynatemp_range': 0,
-              'dynatemp_exponent': 1,
-              'top_k': 40,
-              'min_p': 0.05,
-              'tfs_z': 1,
-              'typ_p': 1,
-              'repeat_last_n': 64,
-              'repeat_penalty': 1,
-              'mirostat': False,
-              'mirostat_tau': 5,
-              'mirostat_eta': 0.100000001,
-              'penalize_nl': False,
-              'ignore_eos': False,
-              'n_probs': 0,
-              'min_keep': 0,
-              'engine': os.environ['ENGINE'],
-              'prompt_template': os.environ['PROMPT_TEMPLATE'],
-              'ctx_len': 4096,
-              'ngl': 34
-          }
+          # Create model.yml content with sections
+          def write_section(file, content, section_name='', subsection=''):
+              if section_name:
+                  file.write(f"# BEGIN {section_name}\n")
+              if subsection:
+                  file.write(f"# BEGIN {subsection}\n")
+              
+              # Special handling for prompt_template to ensure it's a single line with preserved \n
+              if 'prompt_template' in content:
+                  # Create a copy of the content to modify
+                  modified_content = content.copy()
+                  # Convert the prompt template to a literal string that preserves \n
+                  prompt_template = modified_content['prompt_template']
+                  # Remove the prompt_template from the content to handle it separately
+                  del modified_content['prompt_template']
+                  
+                  # Dump the rest of the content
+                  yaml_content = yaml.dump(modified_content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
+                  file.write(yaml_content)
+                  
+                  # Write the prompt_template separately with proper escaping
+                  file.write(f'prompt_template: "{prompt_template}"\n')
+              else:
+                  yaml_content = yaml.dump(content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
+                  file.write(yaml_content)
+                        
+              if subsection:
+                  file.write(f"# END {subsection}\n")
+              if section_name:
+                  file.write(f"# END {section_name}\n")
 
-          # Create the model.yml file with proper sections and comments
           with open('model.yml', 'w') as f:
-              f.write("# BEGIN GENERAL GGUF METADATA\n")
-              yaml.dump({k: model_content[k] for k in ['id', 'model', 'name', 'version']}, 
-                       f, default_flow_style=False, sort_keys=False)
-              f.write("\n# END GENERAL GGUF METADATA\n\n")
+              # General metadata section
+              general_metadata = {
+                  'id': os.environ['MODEL_NAME'],
+                  'model': os.environ['MODEL_NAME'],
+                  'name': os.environ['MODEL_NAME'],
+                  'version': 1
+              }
+              write_section(f, general_metadata, 'GENERAL GGUF METADATA')
+              f.write('\n')
+
+              # Inference parameters section
+              f.write("# BEGIN INFERENCE PARAMETERS\n")
               
-              f.write("# BEGIN INFERENCE PARAMETERS\n# BEGIN REQUIRED\n")
-              yaml.dump({'stop': model_content['stop']}, f, default_flow_style=False)
-              f.write("# END REQUIRED\n\n")
+              # Required subsection
+              required_inference = {'stop': stop_tokens}
+              write_section(f, required_inference, '', 'REQUIRED')
+              f.write('\n')
               
-              f.write("# BEGIN OPTIONAL\n")
-              optional_params = dict((k, model_content[k]) for k in [
-                  'stream', 'top_p', 'temperature', 'frequency_penalty',
-                  'presence_penalty', 'max_tokens', 'seed', 'dynatemp_range',
-                  'dynatemp_exponent', 'top_k', 'min_p', 'tfs_z', 'typ_p',
-                  'repeat_last_n', 'repeat_penalty', 'mirostat', 'mirostat_tau',
-                  'mirostat_eta', 'penalize_nl', 'ignore_eos', 'n_probs', 'min_keep'
-              ])
-              yaml.dump(optional_params, f, default_flow_style=False)
-              f.write("# END OPTIONAL\n")
+              # Optional subsection
+              optional_inference = {
+                  'stream': True,
+                  'top_p': 0.9,
+                  'temperature': 0.7,
+                  'frequency_penalty': 0,
+                  'presence_penalty': 0,
+                  'max_tokens': 4096,
+                  'seed': -1,
+                  'dynatemp_range': 0,
+                  'dynatemp_exponent': 1,
+                  'top_k': 40,
+                  'min_p': 0.05,
+                  'tfs_z': 1,
+                  'typ_p': 1,
+                  'repeat_last_n': 64,
+                  'repeat_penalty': 1,
+                  'mirostat': False,
+                  'mirostat_tau': 5,
+                  'mirostat_eta': 0.100000001,
+                  'penalize_nl': False,
+                  'ignore_eos': False,
+                  'n_probs': 0,
+                  'min_keep': 0
+              }
+              write_section(f, optional_inference, '', 'OPTIONAL')
               f.write("# END INFERENCE PARAMETERS\n\n")
-              
-              f.write("# BEGIN MODEL LOAD PARAMETERS\n# BEGIN REQUIRED\n")
-              required_params = dict((k, model_content[k]) for k in [
-                  'engine', 'prompt_template', 'ctx_len', 'ngl'
-              ])
-              yaml.dump(required_params, f, default_flow_style=False)
-              f.write("# END OPTIONAL\n")
+
+              # Model load parameters section
+              f.write("# BEGIN MODEL LOAD PARAMETERS\n")
+              required_load = {
+                  'engine': os.environ['ENGINE'],
+                  'prompt_template': os.environ['PROMPT_TEMPLATE'],
+                  'ctx_len': 4096,
+                  'ngl': 34
+              }
+              write_section(f, required_load, '', 'REQUIRED')
               f.write("# END MODEL LOAD PARAMETERS\n")
 
-          # Create metadata.yml content
+          # Create metadata.yml
           metadata_content = {
               'version': 1,
               'name': os.environ['MODEL_NAME'],
@@ -150,7 +181,7 @@ jobs:
           }
 
           with open('metadata.yml', 'w') as f:
-              yaml.dump(metadata_content, f, default_flow_style=False)
+              write_section(f, metadata_content) 
           EOF
 
       - name: Create HuggingFace Repository and Upload Files
