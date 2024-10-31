@@ -14,7 +14,7 @@ This step will create a model repository on [Cortexso's Hugging Face account](ht
 2. Click `Run workflow` dropdown
 3. Fill in the required information:
   - **`model_name`**: Name of the model to create (will be used in repo name and files)
-  - **`prompt_template`**: Prompt template for the model (default: `<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n)
+  - **`prompt_template`**: Prompt template for the model (default: `<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n`)
    - **`stop_tokens`**: Stop tokens for the model (comma-separated, e.g., `,</s>`) (default: `<|im_end|>`)
    - **`engine`**: Engine to run the model (default: `llama-cpp`)
 4. Click `Run workflow` button to start the conversion
@@ -59,8 +59,6 @@ After the conversion completes:
 For instructions on installing and running the model on Cortex, please refer to the [official documentation](https://cortex.so/docs/)
 
 #### Step 5: Create README For New Model
-
-# Creating the Model Card
 
 1. Navigate to the newly created model repository on [Cortexso's Hugging Face account](https://huggingface.co/cortexso)
 2. Open the repository and select "Create Model Card"
