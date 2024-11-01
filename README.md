@@ -34,7 +34,7 @@ This step will create a model repository on [Cortexso's Hugging Face account](ht
 3. Click `Run workflow` dropdown
 4. Fill in the required information:
 - **`source_model_id`**: The source HuggingFace model ID (e.g., meta-llama/Meta-Llama-3.1-8B-Instruct)
-- **`**source_model_size`**: The model size (e.g., 8b)
+- **`source_model_size`**: The model size (e.g., 8b)
 - **`target_model_id`**: The target HuggingFace model ID
 - **`quantization_level`**: Quantization level (e.g., 'q4-km') or 'all' for all levels
 5. Click `Run workflow` button to start the conversion
