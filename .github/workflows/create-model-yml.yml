@@ -7,6 +7,11 @@ on:
         description: "Name of the model to create (will be used in repo name and files)"
         required: true
         type: string
+      model_variant:
+        description: "Model variant (e.g., 8b, 13b) - will be used in default field"
+        required: true
+        type: string
+        default: "8b"
       prompt_template:
         description: "Prompt template for the model"
         required: true
@@ -22,9 +27,11 @@ on:
         required: true
         type: string
         default: "llama-cpp"
+
 env:
   USER_NAME: cortexso
   MODEL_NAME: ${{ inputs.model_name }}
+  MODEL_VARIANT: ${{ inputs.model_variant }}
   PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
   STOP_TOKENS: ${{ inputs.stop_tokens }}
   ENGINE: ${{ inputs.engine }}
@@ -93,18 +100,13 @@ jobs:
               
               # Special handling for prompt_template to ensure it's a single line with preserved \n
               if 'prompt_template' in content:
-                  # Create a copy of the content to modify
                   modified_content = content.copy()
-                  # Convert the prompt template to a literal string that preserves \n
                   prompt_template = modified_content['prompt_template']
-                  # Remove the prompt_template from the content to handle it separately
                   del modified_content['prompt_template']
                   
-                  # Dump the rest of the content
                   yaml_content = yaml.dump(modified_content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
                   file.write(yaml_content)
                   
-                  # Write the prompt_template separately with proper escaping
                   file.write(f'prompt_template: "{prompt_template}"\n')
               else:
                   yaml_content = yaml.dump(content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
@@ -173,11 +175,11 @@ jobs:
               write_section(f, required_load, '', 'REQUIRED')
               f.write("# END MODEL LOAD PARAMETERS\n")
 
-          # Create metadata.yml
+          # Create metadata.yml with dynamic default field
           metadata_content = {
               'version': 1,
               'name': os.environ['MODEL_NAME'],
-              'default': '8b-gguf-q4-km'
+              'default': f"{os.environ['MODEL_VARIANT']}-gguf-q4-km"
           }
 
           with open('metadata.yml', 'w') as f:
