@@ -228,7 +228,7 @@ on:
 
 env:
   USER_NAME: cortexso
-  MODEL_NAME: "your-default-model-name"  # You'll need to set a default value
+  MODEL_NAME: "test-model"  # You'll need to set a default value
   MODEL_VARIANT: "8b"  # Default model variant
   PROMPT_TEMPLATE: |
     <|im_start|>system
