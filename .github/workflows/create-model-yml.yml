@@ -16,7 +16,12 @@ on:
         description: "Prompt template for the model"
         required: true
         type: string
-        default: "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant"
+        default: |
+          <|im_start|>system
+          {system_message}<|im_end|>
+          <|im_start|>user
+          {prompt}<|im_end|>
+          <|im_start|>assistant
       stop_tokens:
         description: "Stop tokens for the model (comma-separated, e.g., <|im_end|>,</s>)"
         required: true
@@ -76,8 +81,8 @@ jobs:
               pass
 
           def custom_str_representer(dumper, data):
-              if isinstance(data, str):
-                  return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='')
+              if isinstance(data, str) and '\n' in data:
+                  return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
               return SafeRepresenter.represent_str(dumper, data)
 
           CustomDumper.add_representer(str, custom_str_representer)
@@ -98,19 +103,8 @@ jobs:
               if subsection:
                   file.write(f"# BEGIN {subsection}\n")
               
-              # Special handling for prompt_template to ensure it's a single line with preserved \n
-              if 'prompt_template' in content:
-                  modified_content = content.copy()
-                  prompt_template = modified_content['prompt_template']
-                  del modified_content['prompt_template']
-                  
-                  yaml_content = yaml.dump(modified_content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
-                  file.write(yaml_content)
-                  
-                  file.write(f'prompt_template: "{prompt_template}"\n')
-              else:
-                  yaml_content = yaml.dump(content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
-                  file.write(yaml_content)
+              yaml_content = yaml.dump(content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
+              file.write(yaml_content)
                         
               if subsection:
                   file.write(f"# END {subsection}\n")
