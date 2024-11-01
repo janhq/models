@@ -1,45 +1,243 @@
+# name: Create HuggingFace Model Repository
+
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       model_name:
+#         description: "Name of the model to create (will be used in repo name and files)"
+#         required: true
+#         type: string
+#       model_variant:
+#         description: "Model variant (e.g., 8b, 13b) - will be used in default field"
+#         required: true
+#         type: string
+#         default: "8b"
+#       prompt_template:
+#         description: "Prompt template for the model"
+#         required: true
+#         type: string
+#         default: |
+#           <|im_start|>system
+#           {system_message}<|im_end|>
+#           <|im_start|>user
+#           {prompt}<|im_end|>
+#           <|im_start|>assistant
+#       stop_tokens:
+#         description: "Stop tokens for the model (comma-separated, e.g., <|im_end|>,</s>)"
+#         required: true
+#         type: string
+#         default: "<|im_end|>"
+#       engine:
+#         description: "Engine to run the model (e.g., llama-cpp)"
+#         required: true
+#         type: string
+#         default: "llama-cpp"
+
+# env:
+#   USER_NAME: cortexso
+#   MODEL_NAME: ${{ inputs.model_name }}
+#   MODEL_VARIANT: ${{ inputs.model_variant }}
+#   PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
+#   STOP_TOKENS: ${{ inputs.stop_tokens }}
+#   ENGINE: ${{ inputs.engine }}
+  
+# jobs:
+#   create-repo:
+#     runs-on: ubuntu-20-04-gguf
+#     timeout-minutes: 7200
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.10'
+      
+#       - name: Cache Python packages
+#         uses: actions/cache@v4
+#         with:
+#           path: |
+#             ~/.cache/pip
+#             ~/.local/share/pip
+#             .venv
+#           key: ${{ runner.os }}-pip-${{ github.sha }}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-
+
+#       - name: Install dependencies
+#         run: |
+#           pip install huggingface_hub PyYAML
+#           git lfs install
+
+#       - name: Create YAML files
+#         run: |
+#           python3 - << EOF
+#           import yaml
+#           import os
+#           from yaml.representer import SafeRepresenter
+
+#           class CustomDumper(yaml.SafeDumper):
+#               pass
+
+#           def custom_str_representer(dumper, data):
+#               if isinstance(data, str) and '\n' in data:
+#                   return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+#               return SafeRepresenter.represent_str(dumper, data)
+
+#           CustomDumper.add_representer(str, custom_str_representer)
+
+#           def dict_representer(dumper, data):
+#               return dumper.represent_dict(data.items())
+
+#           CustomDumper.add_representer(dict, dict_representer)
+
+#           # Process stop tokens
+#           stop_tokens = os.environ['STOP_TOKENS'].split(',')
+#           stop_tokens = [token.strip() for token in stop_tokens if token.strip()]
+
+#           # Create model.yml content with sections
+#           def write_section(file, content, section_name='', subsection=''):
+#               if section_name:
+#                   file.write(f"# BEGIN {section_name}\n")
+#               if subsection:
+#                   file.write(f"# BEGIN {subsection}\n")
+              
+#               yaml_content = yaml.dump(content, Dumper=CustomDumper, default_flow_style=False, sort_keys=False)
+#               file.write(yaml_content)
+                        
+#               if subsection:
+#                   file.write(f"# END {subsection}\n")
+#               if section_name:
+#                   file.write(f"# END {section_name}\n")
+
+#           with open('model.yml', 'w') as f:
+#               # General metadata section
+#               general_metadata = {
+#                   'id': os.environ['MODEL_NAME'],
+#                   'model': os.environ['MODEL_NAME'],
+#                   'name': os.environ['MODEL_NAME'],
+#                   'version': 1
+#               }
+#               write_section(f, general_metadata, 'GENERAL GGUF METADATA')
+#               f.write('\n')
+
+#               # Inference parameters section
+#               f.write("# BEGIN INFERENCE PARAMETERS\n")
+              
+#               # Required subsection
+#               required_inference = {'stop': stop_tokens}
+#               write_section(f, required_inference, '', 'REQUIRED')
+#               f.write('\n')
+              
+#               # Optional subsection
+#               optional_inference = {
+#                   'stream': True,
+#                   'top_p': 0.9,
+#                   'temperature': 0.7,
+#                   'frequency_penalty': 0,
+#                   'presence_penalty': 0,
+#                   'max_tokens': 4096,
+#                   'seed': -1,
+#                   'dynatemp_range': 0,
+#                   'dynatemp_exponent': 1,
+#                   'top_k': 40,
+#                   'min_p': 0.05,
+#                   'tfs_z': 1,
+#                   'typ_p': 1,
+#                   'repeat_last_n': 64,
+#                   'repeat_penalty': 1,
+#                   'mirostat': False,
+#                   'mirostat_tau': 5,
+#                   'mirostat_eta': 0.100000001,
+#                   'penalize_nl': False,
+#                   'ignore_eos': False,
+#                   'n_probs': 0,
+#                   'min_keep': 0
+#               }
+#               write_section(f, optional_inference, '', 'OPTIONAL')
+#               f.write("# END INFERENCE PARAMETERS\n\n")
+
+#               # Model load parameters section
+#               f.write("# BEGIN MODEL LOAD PARAMETERS\n")
+#               required_load = {
+#                   'engine': os.environ['ENGINE'],
+#                   'prompt_template': os.environ['PROMPT_TEMPLATE'],
+#                   'ctx_len': 4096,
+#                   'ngl': 34
+#               }
+#               write_section(f, required_load, '', 'REQUIRED')
+#               f.write("# END MODEL LOAD PARAMETERS\n")
+
+#           # Create metadata.yml with dynamic default field
+#           metadata_content = {
+#               'version': 1,
+#               'name': os.environ['MODEL_NAME'],
+#               'default': f"{os.environ['MODEL_VARIANT']}-gguf-q4-km"
+#           }
+
+#           with open('metadata.yml', 'w') as f:
+#               write_section(f, metadata_content) 
+#           EOF
+
+#       - name: Create HuggingFace Repository and Upload Files
+#         env:
+#           HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN_WRITE }}
+#         run: |
+#           python3 - << EOF
+#           from huggingface_hub import HfApi, create_repo
+#           import os
+
+#           # Initialize the Hugging Face API
+#           api = HfApi(token=os.environ['HF_TOKEN'])
+
+#           # Create the repository
+#           repo_id = f"${{ env.USER_NAME }}/${{ env.MODEL_NAME }}"
+#           try:
+#               create_repo(repo_id, private=False, token=os.environ['HF_TOKEN'])
+#               print(f"Created repository: {repo_id}")
+#           except Exception as e:
+#               print(f"Repository might already exist or error occurred: {e}")
+
+#           # Upload the files
+#           api.upload_file(
+#               path_or_fileobj="model.yml",
+#               path_in_repo="model.yml",
+#               repo_id=repo_id,
+#               token=os.environ['HF_TOKEN']
+#           )
+#           api.upload_file(
+#               path_or_fileobj="metadata.yml",
+#               path_in_repo="metadata.yml",
+#               repo_id=repo_id,
+#               token=os.environ['HF_TOKEN']
+#           )
+#           print("Files uploaded successfully")
+#           EOF
+
+#       - name: Cleanup
+#         run: |
+#           rm -f model.yml metadata.yml
+
 name: Create HuggingFace Model Repository
 
 on:
-  workflow_dispatch:
-    inputs:
-      model_name:
-        description: "Name of the model to create (will be used in repo name and files)"
-        required: true
-        type: string
-      model_variant:
-        description: "Model variant (e.g., 8b, 13b) - will be used in default field"
-        required: true
-        type: string
-        default: "8b"
-      prompt_template:
-        description: "Prompt template for the model"
-        required: true
-        type: string
-        default: |
-          <|im_start|>system
-          {system_message}<|im_end|>
-          <|im_start|>user
-          {prompt}<|im_end|>
-          <|im_start|>assistant
-      stop_tokens:
-        description: "Stop tokens for the model (comma-separated, e.g., <|im_end|>,</s>)"
-        required: true
-        type: string
-        default: "<|im_end|>"
-      engine:
-        description: "Engine to run the model (e.g., llama-cpp)"
-        required: true
-        type: string
-        default: "llama-cpp"
+  push:
+    branches:
+      - chore/fix
 
 env:
   USER_NAME: cortexso
-  MODEL_NAME: ${{ inputs.model_name }}
-  MODEL_VARIANT: ${{ inputs.model_variant }}
-  PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
-  STOP_TOKENS: ${{ inputs.stop_tokens }}
-  ENGINE: ${{ inputs.engine }}
+  MODEL_NAME: "your-default-model-name"  # You'll need to set a default value
+  MODEL_VARIANT: "8b"  # Default model variant
+  PROMPT_TEMPLATE: |
+    <|im_start|>system
+    {system_message}<|im_end|>
+    <|im_start|>user
+    {prompt}<|im_end|>
+    <|im_start|>assistant
+  STOP_TOKENS: "<|im_end|>"
+  ENGINE: "llama-cpp"
   
 jobs:
   create-repo:
