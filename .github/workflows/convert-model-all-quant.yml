@@ -74,26 +74,26 @@ jobs:
         run: |
           echo "SOURCE_MODEL_ID: ${{ env.SOURCE_MODEL_ID }}"
           echo "MODEL_NAME: ${{ env.MODEL_NAME }}"
-      - name: Check file existence
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: "/mnt/models/${{ env.MODEL_NAME }}/hf"
+
+      # - name: Check file existence
+      #   id: check_files
+      #   uses: andstor/file-existence-action@v1
+      #   with:
+      #     files: "/mnt/models/${{ env.MODEL_NAME }}/hf"
 
 
       - name: Prepare folders
-        if: steps.check_files.outputs.files_exists == 'false'
+        # if: steps.check_files.outputs.files_exists == 'false'
         run: |
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/hf
-          
-      
+          mkdir -p /mnt/models/.cache
+
       - name: Download Hugging Face model
-        id: download_hf
-        if: steps.check_files.outputs.files_exists == 'false'
-        run: |
-          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
-          huggingface-cli logout
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 5
+          command: HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} ${{ env.SOURCE_MODEL_ID }}
 
       - name: Build lib for quantize
         run: |
