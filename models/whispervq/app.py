@@ -32,9 +32,6 @@ import psutil
 import threading
 
 
-
-
-
 logging.basicConfig(level=args.log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler(args.log_path),
