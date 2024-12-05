@@ -132,7 +132,7 @@ jobs:
 
           for quant in "${quant_levels[@]}"; do
             mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/
-            [ ! -f /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ] && ./llama.cpp/llama-quantize /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ${quant_map[${quant}]}
+            [ ! -f /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ] && ./llama.cpp/build/bin/llama-quantize /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ${quant_map[${quant}]}
           done
 
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf
