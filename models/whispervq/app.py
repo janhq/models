@@ -12,7 +12,7 @@ parser.add_argument('--package-dir', type=str, default="",
                     help='The package-dir to be extended to sys.path')
 args = parser.parse_args()
 sys.path.insert(0, args.package_dir)
-os.environ["CUDA_VISIBLE_DEVICES"] =args.device_id # Use the first Nvidia GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = args.device_id # Use the first Nvidia GPU
 
 import logging
 import uvicorn
