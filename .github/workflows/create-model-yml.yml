@@ -34,7 +34,7 @@ on:
         default: "llama-cpp"
 
 env:
-  USER_NAME: cortexso
+  USER_NAME: Minh141120
   MODEL_NAME: ${{ inputs.model_name }}
   MODEL_VARIANT: ${{ inputs.model_variant }}
   PROMPT_TEMPLATE: ${{ inputs.prompt_template }}
