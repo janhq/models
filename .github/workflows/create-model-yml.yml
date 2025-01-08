@@ -182,7 +182,7 @@ jobs:
 
       - name: Create HuggingFace Repository and Upload Files
         env:
-          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN_WRITE }}
+          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN_WRITE_MINH }}
         run: |
           python3 - << EOF
           from huggingface_hub import HfApi, create_repo

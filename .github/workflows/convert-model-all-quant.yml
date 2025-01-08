@@ -93,7 +93,7 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 5
-          command: HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} ${{ env.SOURCE_MODEL_ID }}
+          command: HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ_MINH }} ${{ env.SOURCE_MODEL_ID }}
 
       - name: Build lib for quantize
         run: |
@@ -105,7 +105,7 @@ jobs:
       - name: Convert to GGUF
         run: |
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf
-          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ_MINH }} --add-to-git-credential
           python3 llama.cpp/convert_hf_to_gguf.py "/mnt/models/${{ env.MODEL_NAME }}/hf" --outfile "/mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf"
           huggingface-cli logout
       
@@ -139,7 +139,7 @@ jobs:
 
       - name: Upload to Hugging Face
         run: |
-          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE_MINH }} --add-to-git-credential
           
           if [ "${{ env.QUANT_LEVEL }}" = "all" ]; then
             quant_levels=("q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
