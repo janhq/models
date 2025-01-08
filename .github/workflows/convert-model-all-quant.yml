@@ -21,7 +21,7 @@ on:
         default: 'all'
 
 env:
-  USER_NAME: cortexso
+  USER_NAME: Minh141120
   SOURCE_MODEL_ID: ${{ inputs.source_model_id }}
   SOURCE_MODEL_SIZE: ${{ inputs.source_model_size }}
   TARGET_MODEL_ID: ${{ inputs.target_model_id }}
