@@ -14,7 +14,6 @@ on:
         default: "8b"
       prompt_template:
         description: "Prompt template for the model"
-        required: true
         type: string
         default: |
           <|im_start|>system
@@ -24,7 +23,6 @@ on:
           <|im_start|>assistant
       stop_tokens:
         description: "Stop tokens for the model (comma-separated, e.g., <|im_end|>,</s>)"
-        required: true
         type: string
         default: "<|im_end|>"
       engine:
