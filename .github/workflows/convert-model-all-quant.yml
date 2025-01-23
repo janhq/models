@@ -95,6 +95,108 @@ jobs:
           max_attempts: 5
           command: HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} ${{ env.SOURCE_MODEL_ID }}
 
+      - name: Create README.md
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python3 - << EOF
+          import os
+          import openai
+
+          # Inputs
+          source_model_id = os.environ['SOURCE_MODEL_ID']
+          model_name = os.environ['MODEL_NAME']
+          model_variant = os.environ['SOURCE_MODEL_SIZE']
+          target_model_id = os.environ['TARGET_MODEL_ID']
+          user_name = os.environ['USER_NAME']
+
+          # Extract author from source model ID
+          author = source_model_id.split('/')[0]
+
+          # Call OpenAI API to generate overview
+          completion = client.chat.completions.create(
+              model="gpt-4o-mini",
+              messages=[
+                  {"role": "system", "content": "You are a helpful assistant."},
+                  {
+                      "role": "user",
+                      "content": f"Write a concise overview for a machine learning model named '{target_model_id}' derived from '{source_model_id}', highlighting its purpose, use cases, and performance."
+                  }
+              ]
+          )
+          overview = completion.choices[0].message["content"].strip()
+
+          # README.md template
+          readme_template = f"""\
+
+          ---
+          license: mit
+          ---
+
+          # {model_name.capitalize()} ({model_variant.upper()})
+
+          ## Overview
+
+          {overview}
+
+          ## Variants
+
+          | No | Variant | Cortex CLI command |
+          | --- | --- | --- |
+          | 1 | [gguf](https://huggingface.co/{user_name}/{model_name}/tree/main) | `cortex run {model_name}` |
+
+          ## Use it with Jan (UI)
+
+          1. Install **Jan** using [Quickstart](https://jan.ai/docs/quickstart)
+          2. Use in Jan model Hub:
+              ```text
+              {user_name}/{model_name}
+              ```
+
+          ## Use it with Cortex (CLI)
+
+          1. Install **Cortex** using [Quickstart](https://cortex.jan.ai/docs/quickstart)
+          2. Run the model with command:
+              ```bash
+              cortex run {model_name}
+              ```
+
+          ## Credits
+
+          - **Author:** {author}
+          - **Converter:** [Homebrew](https://www.homebrew.ltd/)
+          - **Original License:** [License](https://huggingface.co/{user_name}/{model_name}#license)
+          """
+
+          # Write the README.md file
+          with open('README.md', 'w') as f:
+              f.write(readme_template)
+          EOF
+
+      - name: Upload README.md to HuggingFace Repository
+        env:
+          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN_WRITE }}
+        run: |
+          python3 - << EOF
+          from huggingface_hub import HfApi
+          import os
+
+          # Initialize the Hugging Face API
+          api = HfApi(token=os.environ['HF_TOKEN'])
+
+          # Repository details
+          repo_id = f"${{ env.USER_NAME }}/${{ env.MODEL_NAME }}"
+
+          # Upload README.md
+          api.upload_file(
+              path_or_fileobj="README.md",
+              path_in_repo="README.md",
+              repo_id=repo_id,
+              token=os.environ['HF_TOKEN']
+          )
+          print("README.md uploaded successfully")
+          EOF
+
       - name: Build lib for quantize
         run: |
           cd llama.cpp
