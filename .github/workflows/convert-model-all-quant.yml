@@ -141,6 +141,19 @@ jobs:
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
           
+          declare -A quant_map=(
+            ["q2-k"]="q2_k"
+            ["q3-ks"]="q3_k_s"
+            ["q3-km"]="q3_k_m"
+            ["q3-kl"]="q3_k_l"
+            ["q4-ks"]="q4_k_s"
+            ["q4-km"]="q4_k_m"
+            ["q5-ks"]="q5_k_s"
+            ["q5-km"]="q5_k_m"
+            ["q6-k"]="q6_k"
+            ["q8-0"]="q8_0"
+          )
+          
           if [ "${{ env.QUANT_LEVEL }}" = "all" ]; then
             quant_levels=("q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
           else
@@ -148,7 +161,9 @@ jobs:
           fi
 
           for quant in "${quant_levels[@]}"; do
-            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" . --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+            new_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
+            mv "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
+            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" .
           done
 
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
