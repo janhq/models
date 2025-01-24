@@ -54,13 +54,12 @@ jobs:
           key: ${{ runner.os }}-pip-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
       - name: Install dependencies
         run: |
           pip3 install -r llama.cpp/requirements.txt
           pip3 install hf-transfer
+          pip3 install openai
           git lfs install
-
       - name: Extract MODEL_NAME
         run: |
           SOURCE_MODEL_ID="${{ env.SOURCE_MODEL_ID }}"
@@ -69,12 +68,12 @@ jobs:
           MODEL_NAME="$(echo $MODEL_NAME | tr '[:upper:]' '[:lower:]')"
           echo $MODEL_NAME
           echo "MODEL_NAME=$MODEL_NAME" >> $GITHUB_ENV
-
       - name: Print environment variables
         run: |
           echo "SOURCE_MODEL_ID: ${{ env.SOURCE_MODEL_ID }}"
           echo "MODEL_NAME: ${{ env.MODEL_NAME }}"
-
+          echo "SOURCE_MODEL_SIZE: ${{ env.SOURCE_MODEL_SIZE }}"
+          echo "TARGET_MODEL_ID: ${{ env.TARGET_MODEL_ID }}"
       # - name: Check file existence
       #   id: check_files
       #   uses: andstor/file-existence-action@v1
@@ -87,7 +86,6 @@ jobs:
         run: |
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/hf
           mkdir -p /mnt/models/.cache
-
       - name: Download Hugging Face model
         uses: nick-fields/retry@v2
         with:
@@ -95,13 +93,103 @@ jobs:
           max_attempts: 5
           command: HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} ${{ env.SOURCE_MODEL_ID }}
 
+      - name: Create README.md
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python3 - << EOF
+          import os
+          from openai import OpenAI
+          
+          # Initialize the OpenAI client
+          client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+          # Inputs
+          source_model_id = os.environ['SOURCE_MODEL_ID']
+          model_name = os.environ['MODEL_NAME']
+          model_variant = os.environ['SOURCE_MODEL_SIZE']
+          target_model_id = os.environ['TARGET_MODEL_ID']
+          user_name = os.environ['USER_NAME']
+          # Extract author from source model ID
+          author = source_model_id.split('/')[0]
+          # Call OpenAI API to generate overview
+          completion = client.chat.completions.create(
+              model="gpt-4o-mini",
+              messages=[
+                  {"role": "system", "content": "You are a helpful assistant."},
+                  {
+                      "role": "user",
+                      "content": f"Write a concise overview for an ai model named '{target_model_id}' derived from '{source_model_id}', highlighting its purpose, use cases, and performance. You DO NOT generate title (# heading 1) and summary sections. For the overview section, make it concise and in a paragraph of 5 sentences"
+                  }
+              ]
+          )
+          overview = completion.choices[0].message.content.strip()
+          model_dir = f"/mnt/models/{model_name}/hf"
+          licenses = []
+          for filename in os.listdir(model_dir):
+              if filename.startswith('LICENSE'):
+                  license_url = f"https://huggingface.co/{source_model_id}/blob/main/{filename}"
+                  licenses.append(f"[{filename}]({license_url})")
+          license_links = " | ".join(licenses) if licenses else "[License](#)"
+          print("License links:", license_links)
+          # README.md template
+          readme_template = f"""\
+          ---
+          license: mit
+          ---
+          ## Overview
+          {overview}
+          ## Variants
+          | No | Variant | Cortex CLI command |
+          | --- | --- | --- |
+          | 1 | [gguf](https://huggingface.co/{user_name}/{model_name}/tree/main) | cortex run {model_name} |
+          ## Use it with Jan (UI)
+          1. Install **Jan** using [Quickstart](https://jan.ai/docs/quickstart)
+          2. Use in Jan model Hub:
+              
+              {user_name}/{model_name}
+              
+          ## Use it with Cortex (CLI)
+          1. Install **Cortex** using [Quickstart](https://cortex.jan.ai/docs/quickstart)
+          2. Run the model with command:
+              
+              cortex run {model_name}
+              
+          ## Credits
+          - **Author:** {author}
+          - **Converter:** [Homebrew](https://www.homebrew.ltd/)
+          - **Original License:** {license_links}
+          """
+          # Write the README.md file
+          with open('README.md', 'w') as f:
+              f.write(readme_template)
+          EOF
+      - name: Upload README.md to HuggingFace Repository
+        env:
+          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN_WRITE }}
+        run: |
+          python3 - << EOF
+          from huggingface_hub import HfApi
+          import os
+          # Initialize the Hugging Face API
+          api = HfApi(token=os.environ['HF_TOKEN'])
+          # Repository details
+          repo_id = f"${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}"
+          print("Uploading README.md to repository:", repo_id)
+          # Upload README.md
+          api.upload_file(
+              path_or_fileobj="README.md",
+              path_in_repo="README.md",
+              repo_id=repo_id,
+              token=os.environ['HF_TOKEN']
+          )
+          print("README.md uploaded successfully")
+          EOF
       - name: Build lib for quantize
         run: |
           cd llama.cpp
           cmake -B build
           cmake --build build --config Release
           cd ../../
-
       - name: Convert to GGUF
         run: |
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf
@@ -123,20 +211,16 @@ jobs:
             ["q6-k"]="Q6_K"
             ["q8-0"]="Q8_0"
           )
-
           if [ "${{ env.QUANT_LEVEL }}" = "all" ]; then
             quant_levels=("q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
           else
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
-
           for quant in "${quant_levels[@]}"; do
             mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/
             [ ! -f /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ] && ./llama.cpp/build/bin/llama-quantize /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ${quant_map[${quant}]}
           done
-
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf
-
       - name: Upload to Hugging Face
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
@@ -159,14 +243,11 @@ jobs:
           else
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
-
           for quant in "${quant_levels[@]}"; do
             new_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
             mv "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
             huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" .
           done
-
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
           huggingface-cli logout
           rm -rf llama.cpp/build/
-
