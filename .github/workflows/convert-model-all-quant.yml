@@ -243,14 +243,31 @@ jobs:
           else
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
+
+          # Create temp directory for branch uploads
+          mkdir -p /tmp/hf_upload
           for quant in "${quant_levels[@]}"; do
+            # Clear temp directory for each branch
+            rm -rf /tmp/hf_upload/*
+
+            # Rename the model file
             new_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
-            mv "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
-            # Push to quantization-specific branch
-            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" . --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
-            # Push to main branch
-            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" .
+            cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/tmp/hf_upload/${new_name}"
+
+            # Push to quantization-specific branch (only contains this specific model)
+            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/tmp/hf_upload/" . --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+
+            # Copy to the main branch directory
+            mkdir -p "/tmp/main_branch"
+            cp "/tmp/hf_upload/${new_name}" "/tmp/main_branch/"
           done
+          
+          # Upload all models to the main branch at once
+          huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/tmp/main_branch/" .
+
+          # Cleanup
+          rm -rf /tmp/hf_upload
+          rm -rf /tmp/main_branch
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
           huggingface-cli logout
           rm -rf llama.cpp/build/
