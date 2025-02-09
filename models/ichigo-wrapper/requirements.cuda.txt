@@ -1,0 +1,20 @@
+fastapi
+uvicorn[standard]
+pydantic
+websockets >= 13.0
+numpy
+g711
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchaudio
+torchvision
+soundfile
+PySoundFile
+openai>=0.28
+pysilero-vad
+aiohttp
+pydub
+python-multipart
+scipy
+discord
+psutil
