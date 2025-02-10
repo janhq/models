@@ -246,11 +246,11 @@ jobs:
           for quant in "${quant_levels[@]}"; do
             if [ -n "${{ env.SOURCE_MODEL_SIZE }}" ]; then
               huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" \
-                --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+                --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}" --path-in-repo "model.gguf"
             else
               new_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
-              mv "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
-              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
+              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" \
+                --path-in-repo "${new_name}"
             fi
           done
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
