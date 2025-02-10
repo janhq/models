@@ -244,9 +244,14 @@ jobs:
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
           for quant in "${quant_levels[@]}"; do
-            new_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
-            mv "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
-            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" .
+            if [ -n "${{ env.SOURCE_MODEL_SIZE }}" ]; then
+              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" \
+                --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+            else
+              new_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
+              mv "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
+              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${new_name}"
+            fi
           done
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
           huggingface-cli logout
