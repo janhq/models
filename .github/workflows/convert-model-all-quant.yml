@@ -243,18 +243,34 @@ jobs:
           else
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
+          # First, upload all files to main branch
           for quant in "${quant_levels[@]}"; do
             if [ -n "${{ env.SOURCE_MODEL_SIZE }}" ]; then
               # Generate the name for the main branch file
               main_file_name="${{ env.MODEL_NAME }}-${quant_map[${quant}]}.gguf"
-
-              # First upload to main branch with the specific naming convention
+              
+              # Upload to main branch with the specific naming convention
               cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${main_file_name}"
               huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${main_file_name}"
+            fi
+          done
 
-              # Then upload to specific branch as model.gguf
-              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" \
-                --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+          # Then, upload to specific branches with only model.gguf
+          for quant in "${quant_levels[@]}"; do
+            if [ -n "${{ env.SOURCE_MODEL_SIZE }}" ]; then
+              branch_name="${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+              
+              # Create a temporary directory for the branch
+              mkdir -p "/tmp/${branch_name}"
+              cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/tmp/${branch_name}/model.gguf"
+              
+              # Upload to branch with only model.gguf
+              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/tmp/${branch_name}/model.gguf" \
+                --revision "${branch_name}" \
+                --repo-type model
+
+              # Cleanup
+              rm -rf "/tmp/${branch_name}"
             fi
           done
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
