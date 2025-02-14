@@ -243,7 +243,8 @@ jobs:
           else
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
-          # First, upload all files to main branch
+          
+          # First, upload all files to main branch with specific names
           for quant in "${quant_levels[@]}"; do
             if [ -n "${{ env.SOURCE_MODEL_SIZE }}" ]; then
               # Generate the name for the main branch file
@@ -254,23 +255,25 @@ jobs:
               huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/${main_file_name}"
             fi
           done
-
-          # Then, upload to specific branches with only model.gguf
+          # Then, create and upload to specific branches with only model.gguf
           for quant in "${quant_levels[@]}"; do
             if [ -n "${{ env.SOURCE_MODEL_SIZE }}" ]; then
               branch_name="${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
               
               # Create a temporary directory for the branch
-              mkdir -p "/tmp/${branch_name}"
-              cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "/tmp/${branch_name}/model.gguf"
+              tmp_dir=$(mktemp -d)
               
-              # Upload to branch with only model.gguf
-              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/tmp/${branch_name}/model.gguf" \
+              # Copy only the specific quantization model and rename it to model.gguf
+              cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "${tmp_dir}/model.gguf"
+              
+              # Create or update branch with only model.gguf
+              huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "${tmp_dir}/model.gguf" \
                 --revision "${branch_name}" \
-                --repo-type model
-
-              # Cleanup
-              rm -rf "/tmp/${branch_name}"
+                --repo-type model \
+                --delete-patterns "*" # Delete existing files in the branch before upload
+              
+              # Cleanup temporary directory
+              rm -rf "${tmp_dir}"
             fi
           done
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
