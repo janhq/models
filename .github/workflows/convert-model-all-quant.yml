@@ -263,16 +263,15 @@ jobs:
               # Create a temporary directory for the branch
               tmp_dir=$(mktemp -d)
               
-              # Copy only the specific quantization model and rename it to model.gguf
+              # Copy the model to the temp directory
               cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" "${tmp_dir}/model.gguf"
               
               # Create or update branch with only model.gguf
               huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "${tmp_dir}/model.gguf" \
                 --revision "${branch_name}" \
-                --repo-type model \
-                --delete-patterns "*" # Delete existing files in the branch before upload
-              
-              # Cleanup temporary directory
+                --repo-type model
+
+              # Cleanup
               rm -rf "${tmp_dir}"
             fi
           done
