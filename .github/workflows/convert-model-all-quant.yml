@@ -33,19 +33,18 @@ jobs:
     timeout-minutes: 7200
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 # v4.1.7
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           repository: janhq/cortex.llamacpp
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # v5.1.1
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          # architecture: 'x64'
 
       - name: Cache Python packages
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           path: |
             ~/.cache/pip
@@ -75,15 +74,7 @@ jobs:
           echo "SOURCE_MODEL_ID: ${{ env.SOURCE_MODEL_ID }}"
           echo "MODEL_NAME: ${{ env.MODEL_NAME }}"
 
-      # - name: Check file existence
-      #   id: check_files
-      #   uses: andstor/file-existence-action@v1
-      #   with:
-      #     files: "/mnt/models/${{ env.MODEL_NAME }}/hf"
-
-
       - name: Prepare folders
-        # if: steps.check_files.outputs.files_exists == 'false'
         run: |
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/hf
           mkdir -p /mnt/models/.cache
@@ -137,7 +128,7 @@ jobs:
 
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf
 
-      - name: Upload to Hugging Face
+      - name: Upload to Hugging Face (quantization branches)
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
           
@@ -151,6 +142,44 @@ jobs:
             huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" . --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
           done
 
+      - name: Upload to Hugging Face (main branch)
+        run: |
+          # Create a temporary directory for renamed files
+          mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/main
+
+          # Define the mapping for new filenames
+          declare -A quant_name_map=(
+            ["q2-k"]="q2_k"
+            ["q3-ks"]="q3_k_s"
+            ["q3-km"]="q3_k_m"
+            ["q3-kl"]="q3_k_l"
+            ["q4-ks"]="q4_k_s"
+            ["q4-km"]="q4_k_m"
+            ["q5-ks"]="q5_k_s"
+            ["q5-km"]="q5_k_m"
+            ["q6-k"]="q6_k"
+            ["q8-0"]="q8_0"
+          )
+
+          if [ "${{ env.QUANT_LEVEL }}" = "all" ]; then
+            quant_levels=("q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
+          else
+            quant_levels=("${{ env.QUANT_LEVEL }}")
+          fi
+
+          # Copy and rename files
+          for quant in "${quant_levels[@]}"; do
+            cp "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf" \
+               "/mnt/models/${{ env.MODEL_NAME }}/gguf/main/${{ env.MODEL_NAME }}-${quant_name_map[${quant}]}.gguf"
+          done
+
+          # Upload to main branch
+          huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" \
+                                "/mnt/models/${{ env.MODEL_NAME }}/gguf/main/" \
+                                . \
+                                --revision "main"
+
+          # Cleanup
           rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
           huggingface-cli logout
           rm -rf llama.cpp/build/
