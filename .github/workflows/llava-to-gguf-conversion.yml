@@ -1,6 +1,8 @@
 name: Convert LLaVA model to GGUF with specified quant
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       llava_model_id:
