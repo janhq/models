@@ -101,6 +101,17 @@ jobs:
             # If legacy conversion fails, try converting using the HF converter
             python ./convert_hf_to_gguf.py /mnt/models/${{ env.MODEL_NAME }}/hf --outfile /mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf
           )
+          
+          # List files to see what was created
+          echo "Listing files in the output directory:"
+          ls -la /mnt/models/${{ env.MODEL_NAME }}/hf/
+          
+          # Find the gguf file and copy it to the expected name if needed
+          GGUF_FILE=$(find /mnt/models/${{ env.MODEL_NAME }}/hf/ -name "*.gguf" | head -n 1)
+          if [ -n "$GGUF_FILE" ] && [ "$GGUF_FILE" != "/mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf" ]; then
+            echo "Found GGUF file at $GGUF_FILE, copying to expected location"
+            cp "$GGUF_FILE" /mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf
+          fi
 
       - name: Quantize the model
         run: |

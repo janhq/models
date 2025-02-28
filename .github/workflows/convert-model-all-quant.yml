@@ -1,17 +1,20 @@
-name: Convert model to gguf with specified quant
+name: Convert LLaVA model to GGUF with specified quant
 
 on:
+  push:
+    branches: [ci/add-llava-conversion-pipeline]
   workflow_dispatch:
     inputs:
-      source_model_id:
-        description: "Source HuggingFace model ID to pull. For ex: meta-llama/Meta-Llama-3.1-8B-Instruct"
+      llava_model_id:
+        description: "LLaVA HuggingFace model ID to pull. For ex: liuhaotian/llava-v1.5-7b"
         required: true
-      source_model_size:
-        description: "The model size. For ex: 8b"
+      llava_version:
+        description: "LLaVA version (1.5 or 1.6)"
         required: true
-        type: string
+        type: choice
+        options: ["1.5", "1.6"]
       target_model_id:
-        description: "Target HuggingFace model ID to push. For ex: llama3.1"
+        description: "Target HuggingFace model ID to push. For ex: llava-1.5-7b-gguf"
         required: true
         type: string
       quantization_level:
@@ -22,8 +25,8 @@ on:
 
 env:
   USER_NAME: cortexso
-  SOURCE_MODEL_ID: ${{ inputs.source_model_id }}
-  SOURCE_MODEL_SIZE: ${{ inputs.source_model_size }}
+  LLAVA_MODEL_ID: ${{ inputs.llava_model_id }}
+  LLAVA_VERSION: ${{ inputs.llava_version }}
   TARGET_MODEL_ID: ${{ inputs.target_model_id }}
   QUANT_LEVEL: ${{ inputs.quantization_level }}
 
@@ -32,11 +35,11 @@ jobs:
     runs-on: ubuntu-20-04-gguf
     timeout-minutes: 7200
     steps:
-      - name: Checkout
+      - name: Checkout llama.cpp repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          repository: janhq/cortex.llamacpp
+          repository: ggerganov/llama.cpp
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -56,14 +59,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip3 install -r llama.cpp/requirements.txt
+          pip3 install -r requirements.txt
+          pip3 install -r examples/llava/requirements.txt
           pip3 install hf-transfer
+          pip3 install torch
           git lfs install
 
       - name: Extract MODEL_NAME
         run: |
-          SOURCE_MODEL_ID="${{ env.SOURCE_MODEL_ID }}"
-          MODEL_NAME="$(echo $SOURCE_MODEL_ID | rev | cut -d/ -f1 | rev)"
+          MODEL_NAME="$(echo ${{ env.LLAVA_MODEL_ID }} | rev | cut -d/ -f1 | rev)"
           echo $MODEL_NAME
           MODEL_NAME="$(echo $MODEL_NAME | tr '[:upper:]' '[:lower:]')"
           echo $MODEL_NAME
@@ -71,36 +75,69 @@ jobs:
 
       - name: Print environment variables
         run: |
-          echo "SOURCE_MODEL_ID: ${{ env.SOURCE_MODEL_ID }}"
+          echo "LLAVA_MODEL_ID: ${{ env.LLAVA_MODEL_ID }}"
           echo "MODEL_NAME: ${{ env.MODEL_NAME }}"
+          echo "LLAVA_VERSION: ${{ env.LLAVA_VERSION }}"
 
       - name: Prepare folders
         run: |
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/hf
+          mkdir -p /mnt/models/${{ env.MODEL_NAME }}/vit
           mkdir -p /mnt/models/.cache
 
-      - name: Download Hugging Face model
+      - name: Download LLaVA model
         uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 10
+          timeout_minutes: 15
           max_attempts: 5
-          command: HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} ${{ env.SOURCE_MODEL_ID }}
+          command: |
+            HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/${{ env.MODEL_NAME }}/hf --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} ${{ env.LLAVA_MODEL_ID }}
 
-      - name: Build lib for quantize
+      - name: Perform LLaVA surgery
         run: |
-          cd llama.cpp
+          if [ "${{ env.LLAVA_VERSION }}" = "1.5" ]; then
+            python ./examples/llava/llava_surgery.py -m /mnt/models/${{ env.MODEL_NAME }}/hf
+          else
+            python ./examples/llava/llava_surgery_v2.py -C -m /mnt/models/${{ env.MODEL_NAME }}/hf
+            mkdir -p /mnt/models/${{ env.MODEL_NAME }}/vit
+            cp /mnt/models/${{ env.MODEL_NAME }}/hf/llava.clip /mnt/models/${{ env.MODEL_NAME }}/vit/pytorch_model.bin
+            cp /mnt/models/${{ env.MODEL_NAME }}/hf/llava.projector /mnt/models/${{ env.MODEL_NAME }}/vit/
+            # Download config for ViT
+            curl -s -q https://huggingface.co/cmp-nct/llava-1.6-gguf/raw/main/config_vit.json -o /mnt/models/${{ env.MODEL_NAME }}/vit/config.json
+          fi
+
+      - name: Convert image encoder to GGUF
+        run: |
+          if [ "${{ env.LLAVA_VERSION }}" = "1.5" ]; then
+            # First, download the CLIP model
+            mkdir -p /mnt/models/clip
+            HF_HUB_ETAG_TIMEOUT=500 huggingface-cli download --repo-type model --local-dir /mnt/models/clip --cache-dir /mnt/models/.cache --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} openai/clip-vit-large-patch14-336
+            
+            # Convert the image encoder
+            python ./examples/llava/convert_image_encoder_to_gguf.py -m /mnt/models/clip --llava-projector /mnt/models/${{ env.MODEL_NAME }}/hf/llava.projector --output-dir /mnt/models/${{ env.MODEL_NAME }}/hf
+          else
+            # For LLaVA 1.6, use the surgery output directly
+            python ./examples/llava/convert_image_encoder_to_gguf.py -m /mnt/models/${{ env.MODEL_NAME }}/vit --llava-projector /mnt/models/${{ env.MODEL_NAME }}/vit/llava.projector --output-dir /mnt/models/${{ env.MODEL_NAME }}/vit --clip-model-is-vision
+          fi
+
+      - name: Build llama.cpp
+        run: |
           cmake -B build
           cmake --build build --config Release
-          cd ../../
 
-      - name: Convert to GGUF
+      - name: Convert LLaMA part to GGUF
         run: |
-          mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf
-          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          python3 llama.cpp/convert_hf_to_gguf.py "/mnt/models/${{ env.MODEL_NAME }}/hf" --outfile "/mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf"
-          huggingface-cli logout
-      
-      - name: Quantize the model 
+          if [ "${{ env.LLAVA_VERSION }}" = "1.5" ]; then
+            python ./examples/convert_legacy_llama.py /mnt/models/${{ env.MODEL_NAME }}/hf --skip-unknown
+          else
+            python ./examples/convert_legacy_llama.py /mnt/models/${{ env.MODEL_NAME }}/hf --skip-unknown || (
+              echo "Legacy conversion failed, trying HF conversion method..."
+              # If legacy conversion fails, try converting using the HF converter
+              python ./convert_hf_to_gguf.py /mnt/models/${{ env.MODEL_NAME }}/hf --outfile /mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf
+            )
+          fi
+
+      - name: Quantize the model
         run: |
           declare -A quant_map=(
             ["q2-k"]="Q2_K"
@@ -121,16 +158,33 @@ jobs:
             quant_levels=("${{ env.QUANT_LEVEL }}")
           fi
 
+          # Copy mmproj file to appropriate location
+          if [ "${{ env.LLAVA_VERSION }}" = "1.5" ]; then
+            MMPROJ_PATH="/mnt/models/${{ env.MODEL_NAME }}/hf/mmproj-model-f16.gguf"
+          else
+            MMPROJ_PATH="/mnt/models/${{ env.MODEL_NAME }}/vit/mmproj-model-f16.gguf"
+          fi
+          
+          mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/
+
+          # Create directory for base f16 model
+          mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/f16/
+          cp /mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/f16/model.gguf
+          cp ${MMPROJ_PATH} /mnt/models/${{ env.MODEL_NAME }}/gguf/f16/mmproj.gguf
+
+          # Quantize for each level
           for quant in "${quant_levels[@]}"; do
             mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/
-            [ ! -f /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ] && ./llama.cpp/build/bin/llama-quantize /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ${quant_map[${quant}]}
+            ./build/bin/llama-quantize /mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/model.gguf ${quant_map[${quant}]}
+            cp ${MMPROJ_PATH} /mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/mmproj.gguf
           done
-
-          rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/model-origin.gguf
 
       - name: Upload to Hugging Face (quantization branches)
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
+          
+          # Upload f16 model
+          huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/f16/" . --revision "gguf-f16"
           
           if [ "${{ env.QUANT_LEVEL }}" = "all" ]; then
             quant_levels=("q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
@@ -139,7 +193,7 @@ jobs:
           fi
 
           for quant in "${quant_levels[@]}"; do
-            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" . --revision "${{ env.SOURCE_MODEL_SIZE }}-gguf-${quant}"
+            huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "/mnt/models/${{ env.MODEL_NAME }}/gguf/${quant}/" . --revision "gguf-${quant}"
           done
 
       - name: Upload to Hugging Face (main branch)
@@ -147,8 +201,17 @@ jobs:
           # Create a temporary directory for renamed files
           mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/main
 
+          # Copy mmproj file
+          if [ "${{ env.LLAVA_VERSION }}" = "1.5" ]; then
+            MMPROJ_PATH="/mnt/models/${{ env.MODEL_NAME }}/hf/mmproj-model-f16.gguf"
+          else
+            MMPROJ_PATH="/mnt/models/${{ env.MODEL_NAME }}/vit/mmproj-model-f16.gguf"
+          fi
+          cp ${MMPROJ_PATH} /mnt/models/${{ env.MODEL_NAME }}/gguf/main/mmproj-model-f16.gguf
+
           # Define the mapping for new filenames
           declare -A quant_name_map=(
+            ["f16"]="f16"
             ["q2-k"]="q2_k"
             ["q3-ks"]="q3_k_s"
             ["q3-km"]="q3_k_m"
@@ -162,9 +225,9 @@ jobs:
           )
 
           if [ "${{ env.QUANT_LEVEL }}" = "all" ]; then
-            quant_levels=("q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
+            quant_levels=("f16" "q2-k" "q3-ks" "q3-km" "q3-kl" "q4-ks" "q4-km" "q5-ks" "q5-km" "q6-k" "q8-0")
           else
-            quant_levels=("${{ env.QUANT_LEVEL }}")
+            quant_levels=("f16" "${{ env.QUANT_LEVEL }}")
           fi
 
           # Copy and rename files
@@ -179,7 +242,7 @@ jobs:
                                 . \
                                 --revision "main"
 
+
+
           # Cleanup
-          rm -rf /mnt/models/${{ env.MODEL_NAME }}/gguf/*
           huggingface-cli logout
-          rm -rf llama.cpp/build/
