@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       llava_version:
-        description: 'LLaVA version (e.g., 1.5 or 1.6)'
+        description: 'LLaVA version (e.g., 1.6)'
         required: true
         type: string
       target_model_id:
@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       quant_levels:
-        description: 'Quantization levels to generate (comma-separated, e.g., f16,q4-km,q5-k-m,q8-0)'
+        description: 'Quantization levels to generate (comma-separated, e.g., f16,q4-km)'
         required: true
         type: string
 
@@ -37,7 +37,7 @@ jobs:
           python-version: '3.12'
 
       - name: Cache Python packages
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           path: |
             ~/.cache/pip
@@ -140,9 +140,39 @@ jobs:
           for QUANT in "${QUANT_ARRAY[@]}"; do
             if [ "$QUANT" != "f16" ]; then  # Skip f16 as we already created it
               QUANT_DIR=$(echo "$QUANT" | tr '[:upper:]' '[:lower:]')
-              QUANT_TYPE=$(echo "$QUANT" | tr 'a-z-' 'A-Z_')  # Convert q4-km to Q4_K_M
+              
+              # Special handling for known quantization types
+              case "$QUANT" in
+                "q4-km")
+                  QUANT_TYPE="Q4_K_M"
+                  ;;
+                "q5-km")
+                  QUANT_TYPE="Q5_K_M"
+                  ;;
+                "q8-0")
+                  QUANT_TYPE="Q8_0"
+                  ;;
+                "q6-k")
+                  QUANT_TYPE="Q6_K"
+                  ;;
+                *)
+                  # Default conversion (with caution)
+                  QUANT_TYPE=$(echo "$QUANT" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+                  ;;
+              esac
+              
+              echo "Converting $QUANT to quantization type: $QUANT_TYPE"
               
               echo "Creating quantization: $QUANT_DIR using type $QUANT_TYPE"
+              
+              # Check if this is a valid quantization type before proceeding
+              if ./build/bin/llama-quantize --help | grep -q "$QUANT_TYPE"; then
+                echo "Confirmed $QUANT_TYPE is a valid quantization type"
+              else
+                echo "WARNING: $QUANT_TYPE might not be a valid quantization type, but proceeding anyway..."
+                echo "Available quantization types:"
+                ./build/bin/llama-quantize --help | grep -A 20 "Available quantization types"
+              fi
               mkdir -p /mnt/models/${{ env.MODEL_NAME }}/gguf/$QUANT_DIR/
               ./build/bin/llama-quantize /mnt/models/${{ env.MODEL_NAME }}/hf/ggml-model-f16.gguf /mnt/models/${{ env.MODEL_NAME }}/gguf/$QUANT_DIR/model.gguf $QUANT_TYPE
               cp ${MMPROJ_PATH} /mnt/models/${{ env.MODEL_NAME }}/gguf/$QUANT_DIR/mmproj.gguf
